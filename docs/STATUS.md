@@ -58,6 +58,21 @@ Current `main` now contains `DriverFix.Cli` with:
 
 DFX-003 does not change the frozen DFX-001/002 parser/provider behavior. Real `dotnet build` and Windows CLI execution remain OPEN.
 
+### DFX-004 — inventory integration evidence: PRESENT / FIXTURE-CONTRACT VERIFIED
+
+Current `main` now contains deterministic end-to-end fixtures and `verification/verify_dfx004.py` covering:
+
+- English PnPUtil text → parser semantics → device models → exact CLI text;
+- synthetic Russian PnPUtil text → parser semantics → device models → exact CLI text;
+- missing manufacturer fallback to `unknown`;
+- decorated Code 28 extraction in the integrated output;
+- Hardware/Compatible ID continuation preservation;
+- empty inventory output;
+- binding checks against the frozen parser/formatter contracts when run from a repository checkout;
+- no driver mutation operations.
+
+The DFX-004 delta adds verification evidence only and does not refactor DFX-001/002/003 production code. Real C# compilation and real Windows PnPUtil execution remain OPEN.
+
 ## Historical DFX lineage
 
 The project has evidence-backed design/contract work through DFX-014:
@@ -72,13 +87,13 @@ The project has evidence-backed design/contract work through DFX-014:
 - DFX-013 — conservative rollback;
 - DFX-014 — durable transaction/recovery and initial privilege boundary.
 
-DFX-001, DFX-002 and DFX-003 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
+DFX-001 through DFX-004 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
 
 ## Earliest blocking gate
 
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-004 — deterministic end-to-end inventory presentation fixtures: PnPUtil text → parser → device models → CLI formatter → exact expected output.**
+Nearest unfinished leaf: **DFX-005 — typed inventory failure taxonomy and cancellation/process-failure boundary, preserving DFX-001..004 behavior.**
 
 Do not skip directly to broad feature work based only on historical chat artifacts.
 

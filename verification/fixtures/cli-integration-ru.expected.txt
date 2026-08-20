@@ -1,0 +1,12 @@
+Connected devices: 1
+
+[1] Тестовое устройство PCI
+Instance ID: PCI\VEN_8086&DEV_1234\ABC
+Class: System
+Manufacturer: Intel
+Status: Запущено
+Problem Code: 0
+Hardware IDs:
+  - PCI\VEN_8086&DEV_1234
+Compatible IDs:
+  - PCI\VEN_8086&DEV_1234&REV_01

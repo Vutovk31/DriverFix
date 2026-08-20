@@ -1,0 +1,23 @@
+Microsoft PnP Utility
+
+Instance ID:                USB\VID_0BDA&PID_8771\001
+Device Description:         Realtek Bluetooth Adapter
+Class Name:                 Bluetooth
+Manufacturer Name:          Realtek
+Status:                     Started
+Problem Code:               0
+Hardware IDs:
+                            USB\VID_0BDA&PID_8771
+Compatible IDs:
+                            USB\Class_E0&SubClass_01&Prot_01
+
+Instance ID:                USB\VID_1234&PID_5678\002
+Device Description:         Unknown USB Device
+Class Name:                 USB
+Manufacturer Name:
+Status:                     Error
+Problem Code:               28 (0x1C) [CM_PROB_FAILED_INSTALL]
+Hardware IDs:
+                            USB\VID_1234&PID_5678
+                            USB\VID_1234
+Compatible IDs:

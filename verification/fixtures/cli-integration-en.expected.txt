@@ -1,0 +1,24 @@
+Connected devices: 2
+
+[1] Realtek Bluetooth Adapter
+Instance ID: USB\VID_0BDA&PID_8771\001
+Class: Bluetooth
+Manufacturer: Realtek
+Status: Started
+Problem Code: 0
+Hardware IDs:
+  - USB\VID_0BDA&PID_8771
+Compatible IDs:
+  - USB\Class_E0&SubClass_01&Prot_01
+
+[2] Unknown USB Device
+Instance ID: USB\VID_1234&PID_5678\002
+Class: USB
+Manufacturer: unknown
+Status: Error
+Problem Code: 28
+Hardware IDs:
+  - USB\VID_1234&PID_5678
+  - USB\VID_1234
+Compatible IDs:
+  - none
