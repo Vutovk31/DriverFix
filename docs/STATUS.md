@@ -32,33 +32,33 @@ Windows Update Agent driver candidate discovery, exact DFX-009 evidence gating, 
 Exact `oem#.inf` backup via `pnputil /export-driver` is physically present with empty-target, exit-code and on-disk artifact verification. Real Windows export remains OPEN.
 
 ### DFX-012 — controlled repair transaction: PRESENT / STATIC-CONTRACT VERIFIED
-Current `main` contains:
-- `RepairRequest`, `RepairResult` and typed `RepairOutcome`;
-- mandatory verified compatibility and positive DriverFix match score;
-- mandatory DFX-011 verified backup with positive artifact bytes;
-- before-snapshot bound to the exact target InstanceId;
-- blast-radius gate `ConnectedMatchingDeviceCount == 1` because `pnputil /add-driver <inf> /install` may update any matching devices;
-- exact existing `.inf` path with wildcard rejection;
-- exact install shape `pnputil /add-driver <exact.inf> /install`;
-- targeted restart `pnputil /restart-device <InstanceId>`;
-- reboot-required handling for 3010/1641 without declaring VERIFIED before post-reboot evidence;
-- install rejection handling including exit 259;
-- unknown post-mutation process state escalated to `ManualRecoveryRequired` rather than blind retry;
-- post-repair snapshot verification requiring same target, healthy state and either driver identity change or clearing of the original non-zero PnP problem;
-- unproven repair routed to `RollbackRequired`;
-- no destructive fallback (`/delete-driver`, `/remove-device`, `/uninstall`, `/force`, `/subdirs`);
-- `verification/verify_dfx012.py` binding these invariants.
+Repair requires verified compatibility, positive DriverFix match score, verified backup, target-bound before snapshot, one connected matching device, one exact existing INF, targeted restart and post-repair evidence. Reboot/unknown/unproven outcomes are not mislabeled VERIFIED. No destructive fallback.
 
-Microsoft documents that `/install` installs/updates on any matching devices and that `/restart-device <instance ID>` targets a specific device. Real Windows repair execution and C# compilation remain OPEN.
+### DFX-013 — conservative rollback: PRESENT / STATIC-CONTRACT VERIFIED
+Current `main` contains:
+- `RollbackRequest`, `RollbackResult` and typed `RollbackOutcome`;
+- mandatory verified backup with positive bytes;
+- original and failed snapshots bound to the exact target InstanceId;
+- rollback blast-radius gate `ConnectedMatchingDeviceCount == 1` because restore uses `pnputil /add-driver <backup.inf> /install`, which Windows documents as applying to matching devices;
+- one exact existing backup `.inf` with wildcard rejection;
+- restore shape `pnputil /add-driver <backup.inf> /install`;
+- targeted restart `pnputil /restart-device <InstanceId>`;
+- reboot-required handling for 3010/1641 without replaying restore or declaring `RolledBack`;
+- exit 259 and unknown mutation state escalated to `ManualRecoveryRequired` with no force/delete fallback;
+- post-rollback verification requiring the same target, healthy PnP state, and restoration of the original INF or original driver version;
+- no `/delete-driver`, `/remove-device`, `/uninstall`, `/force` or `/subdirs` fallback;
+- `verification/verify_dfx013.py` binding these invariants.
+
+Microsoft documents `/install` as installing/updating on any matching devices; DFX-013 therefore deliberately mirrors DFX-012's single-matching-device gate. Real Windows rollback execution and C# compilation remain OPEN.
 
 ## Historical DFX lineage
 Evidence-backed design exists through DFX-014.
-DFX-001 through DFX-012 are physically present in canonical GitHub.
+DFX-001 through DFX-013 are physically present in canonical GitHub.
 
 ## Earliest blocking gate
-**P0 — continue canonical source consolidation in order.**
+**P0 — finish canonical source consolidation.**
 
-Nearest unfinished leaf: **DFX-013 — conservative rollback using the verified backup, with the same matching-device blast-radius protection before restore mutation.**
+Nearest unfinished leaf: **DFX-014 — durable transaction journal/recovery state plus initial privilege boundary, reconciled with the now-physical DFX-012 repair and DFX-013 rollback contracts.**
 
 ## Next engineering unit after consolidation
 **DFX-015 — elevated worker executable + strict IPC contract.**
@@ -67,4 +67,4 @@ Nearest unfinished leaf: **DFX-013 — conservative rollback using the verified 
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
 
 ## Current priority
-`consolidate DFX-001..014 → DFX-015 → real compile → win-x64 executable → Windows smoke → hardware repair/rollback → Audio Diagnostics`
+`DFX-014 → DFX-015 → real compile → win-x64 executable → Windows smoke → hardware repair/rollback → Audio Diagnostics`
