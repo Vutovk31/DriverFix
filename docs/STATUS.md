@@ -41,33 +41,30 @@ Rollback requires verified backup, target-bound original/failed snapshots, one c
 Durable journal/recovery planning is physically present. Known-applied mutation resumes verification only; ambiguous mutation-started states require manual recovery rather than blind replay. Initial Windows privilege check is present without auto-elevation.
 
 ### DFX-015 — elevated worker + strict IPC boundary: PRESENT / STATIC-CONTRACT VERIFIED
-Current `main` contains:
-- typed `ElevatedOperation` allow-list with only `InstallExactInf`, `RestartExactDevice`, and `RestoreExactBackup`;
-- typed `ElevatedRequest` / `ElevatedResponse` with a one-time nonce;
-- `ElevatedOperationValidator` requiring exact `.inf` paths, rejecting wildcards and requiring exact InstanceId for targeted restart;
-- separate `DriverFix.Elevated` executable project targeting Windows;
-- worker manifest with `requireAdministrator`;
-- unelevated `ElevatedWorkerBroker` creating a one-connection named pipe with `PipeOptions.CurrentUserOnly`;
-- 256-bit cryptographic nonce and random pipe name;
-- UAC launch through `UseShellExecute=true` + `Verb="runas"`;
-- worker-side nonce comparison before command dispatch;
-- worker constructs PnPUtil argument arrays internally from the typed operation; it does not execute free-form command text;
-- no `cmd.exe`, PowerShell or arbitrary script payload boundary;
-- reboot-required exit codes 3010/1641 preserved in the structured response;
-- `verification/verify_dfx015.py` binding 16 IPC/UAC/allow-list invariants.
+Typed elevated operation allow-list, separate `DriverFix.Elevated` executable, `requireAdministrator`, one-shot named pipe, 256-bit nonce, UAC broker and worker-side validation are physically present. No free-form shell/PowerShell command boundary. Real UAC/IPC/PnPUtil execution remains OPEN.
 
-Real UAC consent, named-pipe exchange, PnPUtil mutation and C# compilation remain OPEN. This status is intentionally not Windows runtime GREEN.
+### Canonical solution/build surface: PRESENT / STATIC-CONTRACT VERIFIED
+Current `main` now contains `DriverFix.sln` with all five canonical projects:
+- `DriverFix.Core`;
+- `DriverFix.Persistence`;
+- `DriverFix.Windows`;
+- `DriverFix.Cli`;
+- `DriverFix.Elevated`.
+
+Debug/Release configurations are present. Windows-facing projects target `net10.0-windows`; the elevated project keeps its UAC manifest. `verification/verify_build_surface.py` verifies the project graph and, when a .NET SDK is physically available, escalates to real `dotnet build DriverFix.sln -c Release --nologo` instead of treating static checks as compilation.
+
+The current assistant runtime has no `dotnet` executable, so real compiler evidence is **BLOCKED_ENVIRONMENT**, not GREEN.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**, and the first post-consolidation privileged execution boundary DFX-015 is now physically present.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 and the canonical solution/build surface are also physically present.
 
 ## Earliest blocking gate
-**P0 — obtain real compiler evidence from the complete canonical source tree.**
+**P0 — obtain the first real compiler result from the canonical solution.**
 
-Nearest unfinished leaf: **create/update the canonical solution/build surface to include Core, Windows, Persistence, CLI and Elevated projects, then run real `dotnet build` and fix the earliest compile failure.**
+Nearest unfinished leaf: **run `dotnet build DriverFix.sln -c Release --nologo` in a .NET 10-capable environment, capture the earliest compile failure, apply the minimum fix, and repeat until compile GREEN.**
 
 ## Next gates
-`canonical solution/build → real dotnet compile → win-x64 DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
+`real dotnet compile → fix earliest compiler failure → win-x64 publish → DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
