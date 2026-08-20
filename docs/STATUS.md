@@ -29,27 +29,36 @@ Opaque exact matching is physically present across Hardware→Hardware, Hardware
 Windows Update Agent driver candidate discovery, exact DFX-009 evidence gating, EULA/hidden blocking and no-download/no-install constraints are physically present. Real WUA COM execution remains OPEN.
 
 ### DFX-011 — verified exact-INF backup/export gate: PRESENT / STATIC-REFERENCE VERIFIED
-Current `main` contains:
-- `IDriverBackupService` and `DriverBackupVerificationResult`;
-- `PnpUtilDriverBackupService` accepting only an exact published OEM INF name matching `oem[0-9]+.inf`;
-- exact command shape `pnputil.exe /export-driver <exact oem#.inf> <target>` with no wildcard export;
-- empty-target precondition to avoid mixing prior artifacts with current backup evidence;
-- non-zero PnPUtil exit treated as blocked;
-- post-export disk verification requiring at least one `.inf`, no zero-length files and positive total bytes;
-- explicit evidence text and exported-file list;
-- no add/delete/install/uninstall/remove/restart driver mutation;
-- `verification/verify_dfx011.py` binding exact-INF, empty-target, disk-evidence and no-mutation invariants.
+Exact `oem#.inf` backup via `pnputil /export-driver` is physically present with empty-target, exit-code and on-disk artifact verification. Real Windows export remains OPEN.
 
-Microsoft documents `/export-driver <oem#.inf | *> <target directory>`; DriverFix deliberately restricts this boundary to one exact `oem#.inf`. Real Windows PnPUtil export and C# compilation remain OPEN.
+### DFX-012 — controlled repair transaction: PRESENT / STATIC-CONTRACT VERIFIED
+Current `main` contains:
+- `RepairRequest`, `RepairResult` and typed `RepairOutcome`;
+- mandatory verified compatibility and positive DriverFix match score;
+- mandatory DFX-011 verified backup with positive artifact bytes;
+- before-snapshot bound to the exact target InstanceId;
+- blast-radius gate `ConnectedMatchingDeviceCount == 1` because `pnputil /add-driver <inf> /install` may update any matching devices;
+- exact existing `.inf` path with wildcard rejection;
+- exact install shape `pnputil /add-driver <exact.inf> /install`;
+- targeted restart `pnputil /restart-device <InstanceId>`;
+- reboot-required handling for 3010/1641 without declaring VERIFIED before post-reboot evidence;
+- install rejection handling including exit 259;
+- unknown post-mutation process state escalated to `ManualRecoveryRequired` rather than blind retry;
+- post-repair snapshot verification requiring same target, healthy state and either driver identity change or clearing of the original non-zero PnP problem;
+- unproven repair routed to `RollbackRequired`;
+- no destructive fallback (`/delete-driver`, `/remove-device`, `/uninstall`, `/force`, `/subdirs`);
+- `verification/verify_dfx012.py` binding these invariants.
+
+Microsoft documents that `/install` installs/updates on any matching devices and that `/restart-device <instance ID>` targets a specific device. Real Windows repair execution and C# compilation remain OPEN.
 
 ## Historical DFX lineage
 Evidence-backed design exists through DFX-014.
-DFX-001 through DFX-011 are physically present in canonical GitHub.
+DFX-001 through DFX-012 are physically present in canonical GitHub.
 
 ## Earliest blocking gate
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-012 — controlled repair transaction that cannot execute unless DFX-011 backup result is verified.**
+Nearest unfinished leaf: **DFX-013 — conservative rollback using the verified backup, with the same matching-device blast-radius protection before restore mutation.**
 
 ## Next engineering unit after consolidation
 **DFX-015 — elevated worker executable + strict IPC contract.**
