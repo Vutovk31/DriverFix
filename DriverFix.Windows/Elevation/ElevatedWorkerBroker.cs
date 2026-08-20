@@ -38,7 +38,9 @@ public sealed class ElevatedWorkerBroker
             Arguments = $"\"{pipeName}\" \"{nonce}\""
         };
 
-        Process.Start(start) ?? throw new InvalidOperationException("Failed to start elevated worker.");
+        if (Process.Start(start) is null)
+            throw new InvalidOperationException("Failed to start elevated worker.");
+
         await pipe.WaitForConnectionAsync(cancellationToken);
 
         var request = new ElevatedRequest(nonce, operation, infPath, instanceId);
