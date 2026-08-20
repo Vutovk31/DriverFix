@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using DriverFix.Core.Elevation;
 using DriverFix.Core.Failures;
 using DriverFix.Core.Services;
@@ -24,9 +25,12 @@ internal static class Program
             if (args.Length == 1 && string.Equals(args[0], "--workstation-readonly-smoke", StringComparison.Ordinal))
                 return await RunWorkstationReadOnlySmokeAsync();
 
+            if (args.Length == 1 && string.Equals(args[0], "--backup-export-smoke", StringComparison.Ordinal))
+                return await RunBackupExportSmokeAsync();
+
             if (args.Length != 0)
             {
-                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke|--workstation-readonly-smoke]");
+                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke|--workstation-readonly-smoke|--backup-export-smoke]");
                 return 64;
             }
 
@@ -141,6 +145,65 @@ internal static class Program
         Console.WriteLine($"Installed driver metadata: {drivers.Count}");
         Console.WriteLine($"Windows Update driver candidates: {candidates.Count}");
         return 0;
+    }
+
+    private static async Task<int> RunBackupExportSmokeAsync()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Console.Error.WriteLine("DriverFix backup export smoke requires Windows.");
+            return 2;
+        }
+
+        var processRunner = new ProcessRunner();
+        var metadataProvider = new PowerShellDriverMetadataProvider(processRunner);
+        var drivers = await metadataProvider.GetInstalledDriversAsync();
+        var exactInf = drivers
+            .Select(driver => driver.InfName?.Trim())
+            .FirstOrDefault(name =>
+                !string.IsNullOrWhiteSpace(name) &&
+                Regex.IsMatch(
+                    name,
+                    "^oem[0-9]+\\.inf$",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant));
+
+        if (exactInf is null)
+        {
+            Console.Error.WriteLine("DriverFix backup export smoke found no exact published oem#.inf in installed-driver metadata.");
+            return 1;
+        }
+
+        var targetDirectory = Path.Combine(
+            Path.GetTempPath(),
+            $"DriverFix-backup-smoke-{Guid.NewGuid():N}");
+
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            var backupService = new PnpUtilDriverBackupService(processRunner);
+            var result = await backupService.ExportExactInfAsync(
+                exactInf,
+                targetDirectory,
+                timeout.Token);
+
+            if (!result.IsVerified)
+            {
+                Console.Error.WriteLine($"DriverFix backup export smoke blocked: {result.Evidence}");
+                return 1;
+            }
+
+            Console.WriteLine("Backup export smoke: PASS");
+            Console.WriteLine($"Published INF: {result.InfName}");
+            Console.WriteLine($"Exported files: {result.Files.Count}");
+            Console.WriteLine($"Exported bytes: {result.TotalBytes}");
+            Console.WriteLine(result.Evidence);
+            return 0;
+        }
+        finally
+        {
+            if (Directory.Exists(targetDirectory))
+                Directory.Delete(targetDirectory, recursive: true);
+        }
     }
 
     private static async Task<int> RunElevationSmokeAsync()
