@@ -98,6 +98,19 @@ jobs:
           if ($text -notmatch 'Installed driver metadata:\s*[1-9]\d*') { throw "Combined smoke did not emit installed-driver evidence" }
           if ($text -notmatch 'Windows Update driver candidates:\s*\d+') { throw "Combined smoke did not emit WUA evidence" }
 
+      - name: Smoke exact-INF backup export (no driver mutation)
+        shell: pwsh
+        run: |
+          $output = & ./dist/DriverFix.exe --backup-export-smoke 2>&1
+          $exitCode = $LASTEXITCODE
+          $text = ($output | Out-String).Trim()
+          Write-Host $text
+          if ($exitCode -ne 0) { throw "DriverFix.exe backup export smoke failed with exit code $exitCode" }
+          if ($text -notmatch 'Backup export smoke:\s*PASS') { throw "Backup export smoke did not emit PASS evidence" }
+          if ($text -notmatch 'Published INF:\s*oem\d+\.inf') { throw "Backup export smoke did not emit exact published-INF evidence" }
+          if ($text -notmatch 'Exported files:\s*[1-9]\d*') { throw "Backup export smoke did not emit positive file-count evidence" }
+          if ($text -notmatch 'Exported bytes:\s*[1-9]\d*') { throw "Backup export smoke did not emit positive byte-count evidence" }
+
       - name: Upload win-x64 package
         uses: actions/upload-artifact@v4
         with:
