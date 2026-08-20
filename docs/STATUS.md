@@ -44,30 +44,25 @@ Durable journal/recovery planning is physically present. Known-applied mutation 
 Typed elevated operation allow-list, separate `DriverFix.Elevated` executable, `requireAdministrator`, one-shot named pipe, 256-bit nonce, UAC broker and worker-side validation are physically present. No free-form shell/PowerShell command boundary. Real UAC/IPC/PnPUtil execution remains OPEN.
 
 ### Canonical solution/build surface: PRESENT / STATIC-CONTRACT VERIFIED
-Current `main` contains `DriverFix.sln` with all five canonical projects:
-- `DriverFix.Core`;
-- `DriverFix.Persistence`;
-- `DriverFix.Windows`;
-- `DriverFix.Cli`;
-- `DriverFix.Elevated`.
+`DriverFix.sln` contains all five canonical projects: `DriverFix.Core`, `DriverFix.Persistence`, `DriverFix.Windows`, `DriverFix.Cli`, and `DriverFix.Elevated`, with Debug/Release configurations.
 
-Debug/Release configurations are present. Windows-facing projects target `net10.0-windows`; the elevated project keeps its UAC manifest. `verification/verify_build_surface.py` verifies the project graph and escalates to real `dotnet build DriverFix.sln -c Release --nologo` when a .NET SDK is physically available.
+### Windows compiler CI gate: RUNTIME VERIFIED GREEN
+`.github/workflows/build.yml` runs on `windows-latest`, installs .NET 10, records SDK evidence, restores `DriverFix.sln`, and performs a Release build.
 
-### Windows compiler CI gate: PRESENT / RUNTIME RESULT PENDING
-`.github/workflows/build.yml` now provides a canonical real-build path on `windows-latest`: checkout canonical source, install .NET 10 SDK, capture `dotnet --info`, restore `DriverFix.sln`, then run Release `dotnet build` with `--no-restore`.
+Real compiler evidence was obtained on 2026-08-20 through pull request #1. The first run restored all five projects successfully but failed with exactly one compiler error: `CS0201` in `DriverFix.Windows/Elevation/ElevatedWorkerBroker.cs` at the standalone `Process.Start(start) ?? throw ...` expression. The minimal fix replaced it with an explicit null check. A subsequent clean PR run completed `Restore canonical solution` and `Build canonical solution` successfully with the final diff containing only that source fix. The verified fix was squash-merged to `main` as commit `9cfdb6186272adc866027020a7290f96a38cfb12`.
 
-The workflow itself is physically present and its action versions/SDK channel are evidence-backed. A completed GitHub Actions job/log has not yet been observed through the available connector, so **real compiler GREEN remains OPEN**. The assistant shell also cannot resolve external hosts, so that environment failure is not treated as a source-code failure.
+Real compile status: **GREEN**. This does not yet imply real UAC/IPC/PnPUtil hardware behavior is GREEN.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015, the canonical solution/build surface and the real Windows compiler gate are physically present.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present, and the canonical .NET 10 Windows Release compile gate is now runtime verified GREEN.
 
 ## Earliest blocking gate
-**P0 — observe the first completed compiler result from the canonical Windows CI gate.**
+**P0 — produce the first canonical `win-x64` executable build.**
 
-Nearest unfinished leaf: **read the `DriverFix Build` job result; if it fails, capture the earliest compiler error and apply only the minimum fix; if it passes, mark real compile GREEN and move to `win-x64` publish.**
+Nearest unfinished leaf: **add a controlled `dotnet publish` gate for the user-facing executable, produce `DriverFix.exe`, verify the publish output and preserve the elevated worker boundary without falsely claiming hardware repair success.**
 
 ## Next gates
-`observe CI compile result → fix earliest compiler failure or mark compile GREEN → win-x64 publish → DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
+`win-x64 publish → DriverFix.exe → Windows executable smoke → UAC/IPC smoke → read-only hardware inventory → repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
