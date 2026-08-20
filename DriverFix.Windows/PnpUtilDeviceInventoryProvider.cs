@@ -1,4 +1,5 @@
 using DriverFix.Core.Abstractions;
+using DriverFix.Core.Failures;
 using DriverFix.Core.Models;
 
 namespace DriverFix.Windows;
@@ -24,22 +25,53 @@ public sealed class PnpUtilDeviceInventoryProvider : IDeviceInventoryProvider
         CancellationToken cancellationToken = default)
     {
         if (!OperatingSystem.IsWindows())
-            throw new PlatformNotSupportedException(
+            throw new InventoryProviderException(
+                InventoryFailureKind.PlatformUnsupported,
                 "PnPUtil hardware inventory requires Windows.");
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var result = await _processRunner.RunAsync(
-            "pnputil.exe",
-            Arguments,
-            cancellationToken);
+        ProcessResult result;
+        try
+        {
+            result = await _processRunner.RunAsync(
+                "pnputil.exe",
+                Arguments,
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InventoryProviderException(
+                InventoryFailureKind.ProcessLaunchFailed,
+                $"Could not execute PnPUtil inventory: {ex.Message}",
+                innerException: ex);
+        }
 
         if (result.ExitCode != 0)
-            throw new InvalidOperationException(
-                $"PnPUtil inventory failed with exit code {result.ExitCode}: " +
-                Limit(result.StandardError, 4096));
+        {
+            var stderr = Limit(result.StandardError, 4096);
+            throw new InventoryProviderException(
+                InventoryFailureKind.ToolReturnedNonZero,
+                $"PnPUtil inventory failed with exit code {result.ExitCode}.",
+                result.ExitCode,
+                stderr);
+        }
 
-        return PnpUtilInventoryParser.Parse(result.StandardOutput);
+        try
+        {
+            return PnpUtilInventoryParser.Parse(result.StandardOutput);
+        }
+        catch (Exception ex)
+        {
+            throw new InventoryProviderException(
+                InventoryFailureKind.UnexpectedFailure,
+                $"PnPUtil inventory output could not be parsed: {ex.Message}",
+                innerException: ex);
+        }
     }
 
     private static string Limit(string? value, int maxLength)

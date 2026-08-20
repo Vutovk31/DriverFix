@@ -1,3 +1,4 @@
+using DriverFix.Core.Failures;
 using DriverFix.Windows;
 
 namespace DriverFix.Cli;
@@ -14,10 +15,19 @@ internal static class Program
             Console.WriteLine(DeviceInventoryTextFormatter.Format(devices));
             return 0;
         }
-        catch (PlatformNotSupportedException ex)
+        catch (InventoryProviderException ex)
         {
-            Console.Error.WriteLine($"DriverFix inventory is supported on Windows only: {ex.Message}");
-            return 2;
+            Console.Error.WriteLine(
+                $"DriverFix inventory failed [{ex.Kind}]: {ex.Message}");
+
+            return ex.Kind == InventoryFailureKind.PlatformUnsupported
+                ? 2
+                : 1;
+        }
+        catch (OperationCanceledException)
+        {
+            Console.Error.WriteLine("DriverFix inventory cancelled.");
+            return 3;
         }
         catch (Exception ex)
         {
