@@ -26,28 +26,30 @@ Deterministic evidence-only diagnosis is physically present. Metadata join miss 
 Opaque exact matching is physically present across Hardware→Hardware, Hardware→Compatible, Compatible→Hardware and Compatible→Compatible tiers. Comparison is trim-only and case-insensitive, with no substring, VEN/DEV, manufacturer or class inference. DriverFix score is not Windows rank.
 
 ### DFX-010 — trusted read-only candidate discovery: PRESENT / STATIC-CONTRACT VERIFIED
-Current `main` contains:
-- `DriverUpdateCandidate` preserving update identity, provider/manufacturer/model/class/date, WUA `DriverHardwareID`, downloaded/hidden state and EULA state;
-- `IDriverCandidateProvider`;
-- `WindowsUpdateDriverCandidateProvider` using `Microsoft.Update.Session` / `CreateUpdateSearcher()` with `Type='Driver' and IsInstalled=0 and IsHidden=0`;
-- `DriverCandidateJsonParser` supporting singleton and array JSON;
-- conservative handling of WUA `DriverHardwareID` as ambiguous hardware-or-compatible evidence via `SourceMatchIdentifier`;
-- `DriverCandidateEligibilityEvaluator` requiring an exact DFX-009 identifier match;
-- EULA-not-accepted candidates blocked without implicit acceptance;
-- hidden candidates blocked;
-- no download, install, EULA acceptance, PnPUtil mutation or update-installer side effects;
-- `verification/verify_dfx010.py` binding these invariants.
+Windows Update Agent driver candidate discovery, exact DFX-009 evidence gating, EULA/hidden blocking and no-download/no-install constraints are physically present. Real WUA COM execution remains OPEN.
 
-Microsoft documents `IWindowsDriverUpdate.DriverHardwareID` as a hardware ID or compatible ID the update must match to be installable, and WUA search supports `IsInstalled`/`IsHidden` criteria. Real WUA COM execution and C# compilation remain OPEN.
+### DFX-011 — verified exact-INF backup/export gate: PRESENT / STATIC-REFERENCE VERIFIED
+Current `main` contains:
+- `IDriverBackupService` and `DriverBackupVerificationResult`;
+- `PnpUtilDriverBackupService` accepting only an exact published OEM INF name matching `oem[0-9]+.inf`;
+- exact command shape `pnputil.exe /export-driver <exact oem#.inf> <target>` with no wildcard export;
+- empty-target precondition to avoid mixing prior artifacts with current backup evidence;
+- non-zero PnPUtil exit treated as blocked;
+- post-export disk verification requiring at least one `.inf`, no zero-length files and positive total bytes;
+- explicit evidence text and exported-file list;
+- no add/delete/install/uninstall/remove/restart driver mutation;
+- `verification/verify_dfx011.py` binding exact-INF, empty-target, disk-evidence and no-mutation invariants.
+
+Microsoft documents `/export-driver <oem#.inf | *> <target directory>`; DriverFix deliberately restricts this boundary to one exact `oem#.inf`. Real Windows PnPUtil export and C# compilation remain OPEN.
 
 ## Historical DFX lineage
 Evidence-backed design exists through DFX-014.
-DFX-001 through DFX-010 are physically present in canonical GitHub.
+DFX-001 through DFX-011 are physically present in canonical GitHub.
 
 ## Earliest blocking gate
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-011 — verified exact-INF driver backup/export gate before any repair mutation.**
+Nearest unfinished leaf: **DFX-012 — controlled repair transaction that cannot execute unless DFX-011 backup result is verified.**
 
 ## Next engineering unit after consolidation
 **DFX-015 — elevated worker executable + strict IPC contract.**
