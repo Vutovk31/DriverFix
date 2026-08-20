@@ -1,0 +1,3 @@
+DriverFix win-x64 publish probe.
+Purpose: trigger pull_request publish gate for observable runtime evidence.
+Do not merge this marker.
