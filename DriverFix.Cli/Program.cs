@@ -21,9 +21,12 @@ internal static class Program
             if (args.Length == 1 && string.Equals(args[0], "--wua-candidate-smoke", StringComparison.Ordinal))
                 return await RunWindowsUpdateCandidateSmokeAsync();
 
+            if (args.Length == 1 && string.Equals(args[0], "--workstation-readonly-smoke", StringComparison.Ordinal))
+                return await RunWorkstationReadOnlySmokeAsync();
+
             if (args.Length != 0)
             {
-                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke]");
+                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke|--workstation-readonly-smoke]");
                 return 64;
             }
 
@@ -96,6 +99,46 @@ internal static class Program
         var provider = new WindowsUpdateDriverCandidateProvider(new ProcessRunner());
         var candidates = await provider.SearchAsync(timeout.Token);
 
+        Console.WriteLine($"Windows Update driver candidates: {candidates.Count}");
+        return 0;
+    }
+
+    private static async Task<int> RunWorkstationReadOnlySmokeAsync()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Console.Error.WriteLine("DriverFix workstation read-only smoke requires Windows.");
+            return 2;
+        }
+
+        var processRunner = new ProcessRunner();
+        var inventoryProvider = new PnpUtilDeviceInventoryProvider(processRunner);
+        var snapshotService = new InventorySnapshotService(inventoryProvider);
+        var inventory = await snapshotService.CaptureAsync();
+
+        if (!inventory.Succeeded)
+        {
+            var failure = inventory.Failure;
+            Console.Error.WriteLine(
+                $"DriverFix workstation read-only smoke inventory failed [{failure.Kind}]: {failure.Message}");
+            return 1;
+        }
+
+        var metadataProvider = new PowerShellDriverMetadataProvider(processRunner);
+        var drivers = await metadataProvider.GetInstalledDriversAsync();
+        if (drivers.Count == 0)
+        {
+            Console.Error.WriteLine("DriverFix workstation read-only smoke returned no installed driver records.");
+            return 1;
+        }
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+        var candidateProvider = new WindowsUpdateDriverCandidateProvider(processRunner);
+        var candidates = await candidateProvider.SearchAsync(timeout.Token);
+
+        Console.WriteLine("Workstation read-only smoke: PASS");
+        Console.WriteLine($"Connected devices: {inventory.Snapshot.Devices.Count}");
+        Console.WriteLine($"Installed driver metadata: {drivers.Count}");
         Console.WriteLine($"Windows Update driver candidates: {candidates.Count}");
         return 0;
     }
