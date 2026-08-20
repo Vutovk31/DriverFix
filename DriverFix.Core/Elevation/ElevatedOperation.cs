@@ -4,7 +4,8 @@ public enum ElevatedOperation
 {
     InstallExactInf = 1,
     RestartExactDevice = 2,
-    RestoreExactBackup = 3
+    RestoreExactBackup = 3,
+    Probe = 4
 }
 
 public sealed record ElevatedRequest(
