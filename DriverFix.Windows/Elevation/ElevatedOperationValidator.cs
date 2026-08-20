@@ -15,6 +15,10 @@ public static class ElevatedOperationValidator
             ElevatedOperation.RestartExactDevice =>
                 string.IsNullOrWhiteSpace(request.InstanceId) ? "InstanceId is required." : null,
             ElevatedOperation.RestoreExactBackup => ValidateExactInf(request.InfPath),
+            ElevatedOperation.Probe =>
+                request.InfPath is not null || request.InstanceId is not null
+                    ? "Probe does not accept mutation arguments."
+                    : null,
             _ => "Operation is not allowed."
         };
     }
