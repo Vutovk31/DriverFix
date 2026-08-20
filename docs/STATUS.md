@@ -40,8 +40,8 @@ Rollback requires verified backup, target-bound original/failed snapshots, one c
 ### DFX-014 — durable transaction recovery + privilege boundary: PRESENT / STATIC-CONTRACT VERIFIED
 Durable journal/recovery planning is physically present. Known-applied mutation resumes verification only; ambiguous mutation-started states require manual recovery rather than blind replay. Initial Windows privilege check is present without auto-elevation.
 
-### DFX-015 — elevated worker + strict IPC boundary: PRESENT / STATIC-CONTRACT VERIFIED
-Typed elevated operation allow-list, separate `DriverFix.Elevated` executable, `requireAdministrator`, one-shot named pipe, 256-bit nonce, UAC broker and worker-side validation are physically present. No free-form shell/PowerShell command boundary. Real UAC/IPC/PnPUtil mutation execution remains OPEN.
+### DFX-015 — elevated worker + strict IPC boundary: PRESENT / WINDOWS BUILD VERIFIED
+Typed elevated operation allow-list, separate `DriverFix.Elevated` executable, `requireAdministrator`, one-shot named pipe, 256-bit nonce, UAC broker and worker-side validation are physically present. A dedicated `Probe` operation and `DriverFix.exe --elevation-smoke` entry point now exercise broker → UAC launch request → named pipe → nonce validation → worker response without accepting mutation arguments or invoking PnPUtil. Windows CI run `32380218686` verified Release build, both win-x64 publishes, package verification and the existing read-only inventory smoke with this path present. Real interactive UAC acceptance and IPC completion on a non-CI workstation remain OPEN.
 
 ### Canonical solution/build surface: PRESENT / STATIC-CONTRACT VERIFIED
 `DriverFix.sln` contains all five canonical projects: `DriverFix.Core`, `DriverFix.Persistence`, `DriverFix.Windows`, `DriverFix.Cli`, and `DriverFix.Elevated`, with Debug/Release configurations.
@@ -55,18 +55,18 @@ Pull request #2 changed the user-facing assembly name to `DriverFix` and extende
 ### Windows executable smoke: RUNTIME VERIFIED GREEN
 Pull request #3 added a post-publish read-only smoke that launches the exact packaged `dist/DriverFix.exe`, captures stdout/stderr, requires process exit code `0`, and requires `Connected devices: <number>` evidence before artifact upload. Clean Windows run `32377385614` passed restore, Release build, both publish steps, package verification, the executable smoke, and artifact upload. `DriverFix.exe` enumerated **67 connected devices** on Windows Server 2025, including real PnP instance IDs, hardware/compatible IDs, statuses and one device reporting `Problem Code: 28`. The smoke gate was squash-merged as `9724e030481ca74772ea72afcfc35614cdd438bd`.
 
-This proves that the packaged user-facing executable launches and performs its current read-only PnP inventory path on a real Windows runner. It does not prove UAC/IPC mutation, backup/repair/rollback, or user-workstation hardware behavior.
+This proves that the packaged user-facing executable launches and performs its current read-only PnP inventory path on a real Windows runner. It does not prove interactive UAC/IPC completion, backup/repair/rollback, or user-workstation hardware behavior.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present. Real Windows Release compile, canonical win-x64 publish, and the packaged user-facing executable read-only smoke are runtime verified GREEN.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, and the packaged user-facing executable read-only smoke are runtime verified GREEN.
 
 ## Earliest blocking gate
-**P0 — exercise the packaged executable on a non-CI Windows workstation and then isolate UAC/IPC smoke.**
+**P0 — exercise the packaged executable and the no-mutation elevated probe on a non-CI Windows workstation.**
 
-Nearest unfinished leaf: **run the canonical package on the target Windows workstation, confirm the same read-only inventory behavior there, then test the elevated worker boundary separately without performing a driver mutation.**
+Nearest unfinished leaf: **run `DriverFix.exe` normally on the target Windows workstation, then run `DriverFix.exe --elevation-smoke`, approve the UAC prompt, and require the exact evidence `Elevated IPC probe completed; no PnPUtil command was executed.`**
 
 ## Next gates
-`target Windows workstation smoke → UAC/IPC no-mutation smoke → installed-driver metadata/WUA runtime checks → backup field test → controlled repair/rollback field test → Audio Diagnostics`
+`target Windows workstation inventory smoke → UAC/IPC no-mutation smoke → installed-driver metadata/WUA runtime checks → backup field test → controlled repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
