@@ -16,8 +16,8 @@ Historical/static verification never substitutes for physical source presence, c
 ### DFX-001..006 — inventory foundation: PRESENT / STATIC-REFERENCE VERIFIED
 Read-only PnPUtil inventory, parser fixtures, CLI, typed failures, cancellation semantics and stable snapshot/result boundary are physically present. No mutation behavior.
 
-### DFX-007 — installed driver metadata: PRESENT / STATIC-CONTRACT VERIFIED
-Read-only `Win32_PnPSignedDriver` metadata provider, parser and normalized join to inventory snapshots are physically present. Real Windows/WMI execution remains OPEN.
+### DFX-007 — installed driver metadata: PRESENT / WINDOWS CI RUNTIME VERIFIED
+Read-only `Win32_PnPSignedDriver` metadata provider, parser and normalized join to inventory snapshots are physically present. Pull request #5 added packaged `DriverFix.exe --driver-metadata-smoke` and Windows CI run `32386609356` executed the existing CIM/PowerShell provider successfully on Windows Server 2025, returning **63 installed driver metadata records** with process exit code `0`. This proves the packaged DFX-007 provider/parser runtime path on a real Windows runner; target-workstation metadata behavior remains OPEN.
 
 ### DFX-008 — evidence-backed diagnosis: PRESENT / STATIC-CONTRACT VERIFIED
 Deterministic evidence-only diagnosis is physically present. Metadata join miss is not treated as proof of a missing driver. No version-age guessing or mutation.
@@ -58,7 +58,7 @@ Pull request #3 added a post-publish read-only smoke that launches the exact pac
 This proves that the packaged user-facing executable launches and performs its current read-only PnP inventory path on a real Windows runner. It does not prove interactive UAC/IPC completion, backup/repair/rollback, or user-workstation hardware behavior.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, and the packaged user-facing executable read-only smoke are runtime verified GREEN.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, and the DFX-007 installed-driver metadata provider/parser smoke are runtime verified on Windows CI.
 
 ## Earliest blocking gate
 **P0 — exercise the packaged executable and the no-mutation elevated probe on a non-CI Windows workstation.**
@@ -66,7 +66,7 @@ Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX
 Nearest unfinished leaf: **run `DriverFix.exe` normally on the target Windows workstation, then run `DriverFix.exe --elevation-smoke`, approve the UAC prompt, and require the exact evidence `Elevated IPC probe completed; no PnPUtil command was executed.`**
 
 ## Next gates
-`target Windows workstation inventory smoke → UAC/IPC no-mutation smoke → installed-driver metadata/WUA runtime checks → backup field test → controlled repair/rollback field test → Audio Diagnostics`
+`target Windows workstation inventory smoke → UAC/IPC no-mutation smoke → target-workstation installed-driver metadata + WUA runtime checks → backup field test → controlled repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
