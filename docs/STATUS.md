@@ -25,8 +25,8 @@ Deterministic evidence-only diagnosis is physically present. Metadata join miss 
 ### DFX-009 — exact identifier compatibility matching: PRESENT / STATIC-REFERENCE VERIFIED
 Opaque exact matching is physically present across Hardware→Hardware, Hardware→Compatible, Compatible→Hardware and Compatible→Compatible tiers. Comparison is trim-only and case-insensitive, with no substring, VEN/DEV, manufacturer or class inference. DriverFix score is not Windows rank.
 
-### DFX-010 — trusted read-only candidate discovery: PRESENT / STATIC-CONTRACT VERIFIED
-Windows Update Agent driver candidate discovery, exact DFX-009 evidence gating, EULA/hidden blocking and no-download/no-install constraints are physically present. Real WUA COM execution remains OPEN.
+### DFX-010 — trusted read-only candidate discovery: PRESENT / WINDOWS CI RUNTIME VERIFIED
+Windows Update Agent driver candidate discovery, exact DFX-009 evidence gating, EULA/hidden blocking and no-download/no-install constraints are physically present. Pull request #6 added packaged `DriverFix.exe --wua-candidate-smoke` with a 90-second cancellation boundary and Windows CI run `32391879604` executed the existing WUA search path successfully on Windows Server 2025 with process exit code `0`, returning **0 available driver candidates**. Zero candidates is a valid search result; the runtime evidence proves the packaged WUA COM discovery path executes without invoking download/install. Target-workstation WUA behavior remains OPEN.
 
 ### DFX-011 — verified exact-INF backup/export gate: PRESENT / STATIC-REFERENCE VERIFIED
 Exact `oem#.inf` backup via `pnputil /export-driver` is physically present with empty-target, exit-code and on-disk artifact verification. Real Windows export remains OPEN.
@@ -58,7 +58,7 @@ Pull request #3 added a post-publish read-only smoke that launches the exact pac
 This proves that the packaged user-facing executable launches and performs its current read-only PnP inventory path on a real Windows runner. It does not prove interactive UAC/IPC completion, backup/repair/rollback, or user-workstation hardware behavior.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, and the DFX-007 installed-driver metadata provider/parser smoke are runtime verified on Windows CI.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, DFX-007 installed-driver metadata, and DFX-010 read-only WUA candidate discovery are runtime verified on Windows CI.
 
 ## Earliest blocking gate
 **P0 — exercise the packaged executable and the no-mutation elevated probe on a non-CI Windows workstation.**
