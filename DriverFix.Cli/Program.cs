@@ -28,9 +28,12 @@ internal static class Program
             if (args.Length == 1 && string.Equals(args[0], "--backup-export-smoke", StringComparison.Ordinal))
                 return await RunBackupExportSmokeAsync();
 
+            if (args.Length == 1 && string.Equals(args[0], "--repair-preflight-smoke", StringComparison.Ordinal))
+                return RepairPreflightSmoke.Run();
+
             if (args.Length != 0)
             {
-                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke|--workstation-readonly-smoke|--backup-export-smoke]");
+                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke|--workstation-readonly-smoke|--backup-export-smoke|--repair-preflight-smoke]");
                 return 64;
             }
 
