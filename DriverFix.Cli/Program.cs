@@ -18,9 +18,12 @@ internal static class Program
             if (args.Length == 1 && string.Equals(args[0], "--driver-metadata-smoke", StringComparison.Ordinal))
                 return await RunDriverMetadataSmokeAsync();
 
+            if (args.Length == 1 && string.Equals(args[0], "--wua-candidate-smoke", StringComparison.Ordinal))
+                return await RunWindowsUpdateCandidateSmokeAsync();
+
             if (args.Length != 0)
             {
-                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke]");
+                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke]");
                 return 64;
             }
 
@@ -78,6 +81,22 @@ internal static class Program
         }
 
         Console.WriteLine($"Installed driver metadata: {drivers.Count}");
+        return 0;
+    }
+
+    private static async Task<int> RunWindowsUpdateCandidateSmokeAsync()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Console.Error.WriteLine("DriverFix WUA candidate smoke requires Windows.");
+            return 2;
+        }
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+        var provider = new WindowsUpdateDriverCandidateProvider(new ProcessRunner());
+        var candidates = await provider.SearchAsync(timeout.Token);
+
+        Console.WriteLine($"Windows Update driver candidates: {candidates.Count}");
         return 0;
     }
 

@@ -75,6 +75,16 @@ jobs:
           if ($exitCode -ne 0) { throw "DriverFix.exe driver metadata smoke failed with exit code $exitCode" }
           if ($text -notmatch 'Installed driver metadata:\s*[1-9]\d*') { throw "DriverFix.exe driver metadata smoke did not emit positive installed-driver evidence" }
 
+      - name: Smoke Windows Update driver candidate discovery (read-only WUA)
+        shell: pwsh
+        run: |
+          $output = & ./dist/DriverFix.exe --wua-candidate-smoke 2>&1
+          $exitCode = $LASTEXITCODE
+          $text = ($output | Out-String).Trim()
+          Write-Host $text
+          if ($exitCode -ne 0) { throw "DriverFix.exe WUA candidate smoke failed with exit code $exitCode" }
+          if ($text -notmatch 'Windows Update driver candidates:\s*\d+') { throw "DriverFix.exe WUA candidate smoke did not emit candidate-search evidence" }
+
       - name: Upload win-x64 package
         uses: actions/upload-artifact@v4
         with:
