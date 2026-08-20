@@ -33,7 +33,7 @@ It includes Windows/platform guard, non-zero exit-code handling, bounded stderr 
 
 ### DFX-002 — parser fixture/hardening evidence: PRESENT / FIXTURE-CONTRACT VERIFIED
 
-Current `main` now also contains deterministic parser fixtures and `verification/verify_dfx002.py` covering:
+Current `main` also contains deterministic parser fixtures and `verification/verify_dfx002.py` covering:
 
 - decorated problem codes such as `52 (0x34) [...]`;
 - Hardware ID and Compatible ID continuation lines;
@@ -42,7 +42,21 @@ Current `main` now also contains deterministic parser fixtures and `verification
 - Code 28 extraction on the second device;
 - empty-output and no-mutation parser invariants.
 
-The DFX-002 delta does not refactor the frozen DFX-001 production parser. The strongest available local evidence is fixture/reference verification; real C# compilation remains OPEN.
+The DFX-002 delta does not refactor the frozen DFX-001 production parser. The strongest available evidence is fixture/reference verification; real C# compilation remains OPEN.
+
+### DFX-003 — inventory CLI/presentation boundary: PRESENT / STATIC-CONTRACT VERIFIED
+
+Current `main` now contains `DriverFix.Cli` with:
+
+- `DriverFix.Cli.csproj` targeting `net10.0-windows`;
+- references to canonical `DriverFix.Core` and `DriverFix.Windows` projects;
+- `Program.cs` composing the existing `PnpUtilDeviceInventoryProvider` and `ProcessRunner`;
+- `DeviceInventoryTextFormatter` rendering connected-device count, description, Instance ID, class, manufacturer, status, Problem Code, Hardware IDs and Compatible IDs;
+- stable provider-order presentation;
+- explicit exit codes for success, general failure and unsupported platform;
+- `verification/verify_dfx003.py` enforcing the presentation contract and no-mutation invariant.
+
+DFX-003 does not change the frozen DFX-001/002 parser/provider behavior. Real `dotnet build` and Windows CLI execution remain OPEN.
 
 ## Historical DFX lineage
 
@@ -58,13 +72,13 @@ The project has evidence-backed design/contract work through DFX-014:
 - DFX-013 — conservative rollback;
 - DFX-014 — durable transaction/recovery and initial privilege boundary.
 
-DFX-001 and DFX-002 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
+DFX-001, DFX-002 and DFX-003 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
 
 ## Earliest blocking gate
 
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-003 — inventory CLI/presentation boundary, preserving DFX-001/002 behavior.**
+Nearest unfinished leaf: **DFX-004 — deterministic end-to-end inventory presentation fixtures: PnPUtil text → parser → device models → CLI formatter → exact expected output.**
 
 Do not skip directly to broad feature work based only on historical chat artifacts.
 
