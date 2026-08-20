@@ -19,6 +19,9 @@ internal static class Program
             if (args.Length == 1 && string.Equals(args[0], "--driver-metadata-smoke", StringComparison.Ordinal))
                 return await RunDriverMetadataSmokeAsync();
 
+            if (args.Length == 1 && string.Equals(args[0], "--diagnosis-smoke", StringComparison.Ordinal))
+                return await DiagnosisSmoke.RunAsync();
+
             if (args.Length == 1 && string.Equals(args[0], "--wua-candidate-smoke", StringComparison.Ordinal))
                 return await RunWindowsUpdateCandidateSmokeAsync();
 
@@ -33,7 +36,7 @@ internal static class Program
 
             if (args.Length != 0)
             {
-                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--wua-candidate-smoke|--workstation-readonly-smoke|--backup-export-smoke|--repair-preflight-smoke]");
+                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--driver-metadata-smoke|--diagnosis-smoke|--wua-candidate-smoke|--workstation-readonly-smoke|--backup-export-smoke|--repair-preflight-smoke]");
                 return 64;
             }
 

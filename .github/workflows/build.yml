@@ -75,6 +75,21 @@ jobs:
           if ($exitCode -ne 0) { throw "DriverFix.exe driver metadata smoke failed with exit code $exitCode" }
           if ($text -notmatch 'Installed driver metadata:\s*[1-9]\d*') { throw "DriverFix.exe driver metadata smoke did not emit positive installed-driver evidence" }
 
+      - name: Smoke evidence-backed diagnosis (read-only)
+        shell: pwsh
+        run: |
+          $output = & ./dist/DriverFix.exe --diagnosis-smoke 2>&1
+          $exitCode = $LASTEXITCODE
+          $text = ($output | Out-String).Trim()
+          Write-Host $text
+          if ($exitCode -ne 0) { throw "DriverFix.exe diagnosis smoke failed with exit code $exitCode" }
+          if ($text -notmatch 'Diagnosis smoke:\s*PASS') { throw "Diagnosis smoke did not emit PASS evidence" }
+          $deviceMatch = [regex]::Match($text, 'Connected devices:\s*(\d+)')
+          $diagnosisMatch = [regex]::Match($text, 'Diagnoses:\s*(\d+)')
+          if (-not $deviceMatch.Success -or -not $diagnosisMatch.Success) { throw "Diagnosis smoke did not emit count evidence" }
+          if ([int]$deviceMatch.Groups[1].Value -le 0) { throw "Diagnosis smoke reported no connected devices" }
+          if ($deviceMatch.Groups[1].Value -ne $diagnosisMatch.Groups[1].Value) { throw "Diagnosis count does not match connected device count" }
+
       - name: Smoke Windows Update driver candidate discovery (read-only WUA)
         shell: pwsh
         run: |
