@@ -15,7 +15,7 @@ using var pipe = new NamedPipeClientStream(
     pipeName,
     PipeDirection.InOut,
     PipeOptions.Asynchronous);
-await pipe.ConnectAsync(TimeSpan.FromSeconds(30));
+await pipe.ConnectAsync(30_000);
 
 var request = await JsonSerializer.DeserializeAsync<ElevatedRequest>(pipe);
 if (request is null || !string.Equals(request.Nonce, expectedNonce, StringComparison.Ordinal))
