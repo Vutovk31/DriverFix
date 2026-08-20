@@ -3,115 +3,57 @@
 Last canonicalization: 2026-08-20.
 
 ## Repository state
-
 - Repository: `Vutovk31/DriverFix`
 - Visibility: public
 - Canonical branch: `main`
 - License: MIT
 - Development mode: hybrid automated + manual
 
-## Evidence model
-
-Two states must not be confused:
-
-- **Historical/static verification** — evidence produced in previous development cycles.
-- **Canonical physical presence** — implementation actually exists in the current GitHub source tree.
-
-Historical verification does not substitute for compilation or real Windows execution.
+Historical/static verification never substitutes for physical source presence, compilation or real Windows execution.
 
 ## Canonical physical source status
 
 ### DFX-001..006 — inventory foundation: PRESENT / STATIC-REFERENCE VERIFIED
-
-Current `main` contains the read-only PnPUtil inventory chain, parser fixtures, CLI presentation, typed failure taxonomy, cancellation semantics, stable snapshot/result boundary and end-to-end presentation fixtures.
-
-The inventory command remains:
-
-`pnputil /enum-devices /connected /deviceids`
-
-No driver mutation is part of DFX-001..006. Real C# compilation and Windows execution remain OPEN.
+Read-only PnPUtil inventory, parser fixtures, CLI, typed failures, cancellation semantics and stable snapshot/result boundary are physically present. No mutation behavior.
 
 ### DFX-007 — installed driver metadata: PRESENT / STATIC-CONTRACT VERIFIED
-
-Current `main` contains:
-
-- `DriverMetadata` with DeviceID, DeviceName, provider, version, date, INF, signature state and signer;
-- `IDriverMetadataProvider`;
-- `PowerShellDriverMetadataProvider` using read-only `Get-CimInstance Win32_PnPSignedDriver`;
-- selection of `DeviceID`, `DeviceName`, `DriverProviderName`, `DriverVersion`, `DriverDate`, `InfName`, `IsSigned`, `Signer`;
-- `DriverMetadataJsonParser` supporting singleton-object and array JSON shapes;
-- `DeviceSnapshot` joining an inventory device to optional installed-driver metadata;
-- `DeviceSnapshotService` joining normalized PnP InstanceId to WMI DeviceID, case-insensitively;
-- unmatched inventory devices preserved with `InstalledDriver = null`;
-- cancellation propagation and non-zero process exit handling;
-- no driver mutation behavior.
-
-Real PowerShell/WMI execution and C# compilation remain OPEN.
+Read-only `Win32_PnPSignedDriver` metadata provider, parser and normalized join to inventory snapshots are physically present. Real Windows/WMI execution remains OPEN.
 
 ### DFX-008 — evidence-backed diagnosis: PRESENT / STATIC-CONTRACT VERIFIED
+Deterministic evidence-only diagnosis is physically present. Metadata join miss is not treated as proof of a missing driver. No version-age guessing or mutation.
 
-Current `main` now contains:
+### DFX-009 — exact identifier compatibility matching: PRESENT / STATIC-REFERENCE VERIFIED
+Opaque exact matching is physically present across Hardware→Hardware, Hardware→Compatible, Compatible→Hardware and Compatible→Compatible tiers. Comparison is trim-only and case-insensitive, with no substring, VEN/DEV, manufacturer or class inference. DriverFix score is not Windows rank.
 
-- `DiagnosisKind`;
-- `DiagnosisConfidence`;
-- `DeviceDiagnosis` with explicit evidence text;
-- `DiagnosisEngine` operating only on the canonical `DeviceSnapshot`;
-- deterministic precedence: Code 28 → `DriverMissing/High`; other positive PnP codes → `DeviceProblem/High`; missing joined metadata without explicit PnP error → `DriverMetadataMissing/Medium`; `IsSigned=false` → `DriverUnsigned/High`; missing version → `DriverVersionUnknown/Medium`; otherwise → `Healthy/High`;
-- explicit protection against treating a metadata join miss as proof that a driver is missing;
-- no version-age/latest-driver inference;
-- no install/delete/remove/restart behavior;
-- `verification/verify_dfx008.py` binding the classification and no-speculation invariants.
+### DFX-010 — trusted read-only candidate discovery: PRESENT / STATIC-CONTRACT VERIFIED
+Current `main` contains:
+- `DriverUpdateCandidate` preserving update identity, provider/manufacturer/model/class/date, WUA `DriverHardwareID`, downloaded/hidden state and EULA state;
+- `IDriverCandidateProvider`;
+- `WindowsUpdateDriverCandidateProvider` using `Microsoft.Update.Session` / `CreateUpdateSearcher()` with `Type='Driver' and IsInstalled=0 and IsHidden=0`;
+- `DriverCandidateJsonParser` supporting singleton and array JSON;
+- conservative handling of WUA `DriverHardwareID` as ambiguous hardware-or-compatible evidence via `SourceMatchIdentifier`;
+- `DriverCandidateEligibilityEvaluator` requiring an exact DFX-009 identifier match;
+- EULA-not-accepted candidates blocked without implicit acceptance;
+- hidden candidates blocked;
+- no download, install, EULA acceptance, PnPUtil mutation or update-installer side effects;
+- `verification/verify_dfx010.py` binding these invariants.
 
-Real C# compilation and Windows diagnosis execution remain OPEN.
+Microsoft documents `IWindowsDriverUpdate.DriverHardwareID` as a hardware ID or compatible ID the update must match to be installable, and WUA search supports `IsInstalled`/`IsHidden` criteria. Real WUA COM execution and C# compilation remain OPEN.
 
 ## Historical DFX lineage
-
-Evidence-backed design exists through DFX-014:
-
-- DFX-001..006 — inventory and stable snapshot boundary;
-- DFX-007 — installed driver metadata;
-- DFX-008 — evidence-backed diagnosis;
-- DFX-009 — exact identifier compatibility matching;
-- DFX-010 — read-only/trusted candidate discovery;
-- DFX-011 — verified backup/export gate;
-- DFX-012 — controlled repair transaction;
-- DFX-013 — conservative rollback;
-- DFX-014 — durable transaction/recovery and privilege boundary.
-
-DFX-001 through DFX-008 are now physically present in canonical GitHub. Later units retain historical evidence but still require physical consolidation into `main`.
+Evidence-backed design exists through DFX-014.
+DFX-001 through DFX-010 are physically present in canonical GitHub.
 
 ## Earliest blocking gate
-
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-009 — exact opaque hardware/compatible identifier matching and compatibility scoring without substring/manufacturer/class inference.**
-
-Do not skip directly to broad feature work based only on historical chat artifacts.
+Nearest unfinished leaf: **DFX-011 — verified exact-INF driver backup/export gate before any repair mutation.**
 
 ## Next engineering unit after consolidation
-
 **DFX-015 — elevated worker executable + strict IPC contract.**
 
-Target architecture:
-
-- unelevated normal DriverFix process;
-- separate `DriverFix.Elevated` worker requiring administrator privilege;
-- one-shot restricted/authenticated IPC;
-- strict operation allow-list;
-- exact INF and exact target identifiers;
-- no arbitrary shell/PowerShell payload;
-- structured reboot/UAC outcomes.
-
 ## Product milestone
-
-**Audio Diagnostics Pack** remains an explicit roadmap milestone.
-
-Canonical acceptance case:
-
-`Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
-
-Success criterion: after evidence-backed repair and reboot/start under the same initial condition, the endpoint works without physical unplug/replug.
+**Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
 
 ## Current priority
-
 `consolidate DFX-001..014 → DFX-015 → real compile → win-x64 executable → Windows smoke → hardware repair/rollback → Audio Diagnostics`
