@@ -10,8 +10,9 @@ Goal: one physical source tree, one ordered development history, one canonical r
 - [x] `main` designated canonical physical source of truth.
 - [x] Product concept documented.
 - [x] Hybrid automation/manual workflow documented.
-- [ ] Consolidate the historical DFX-001..DFX-014 implementation into the repository and prove the tree is internally consistent.
-- [ ] Add buildable solution/projects and compile the consolidated source.
+- [x] Consolidate the historical DFX-001..DFX-014 implementation into the repository and prove the tree is internally consistent.
+- [x] Add canonical solution/projects for the consolidated source.
+- [ ] Obtain real compiler evidence for the canonical solution.
 
 **Gate:** repository contains the actual source required to build DriverFix; historical chat evidence alone is insufficient.
 
@@ -41,17 +42,17 @@ Historical design/contract work exists for these units; each becomes canonical o
 
 ### Immediate order
 
-1. Consolidate the physical source tree through DFX-014 into GitHub.
-2. Implement/reconcile DFX-015 elevated worker boundary.
-3. Continue DFX-016..023 only where still needed by the real build.
-4. Avoid additional architecture work when compile/runtime evidence can provide higher information gain.
+1. Observe real .NET 10 compiler evidence from the canonical Windows CI gate.
+2. If RED, fix the earliest compiler failure only and rebuild.
+3. If GREEN, publish `win-x64` and produce the first real executable.
+4. Continue DFX-016..023 only where real build/runtime evidence shows they are required before hardware smoke.
 
 ## Phase 2 — Compile and executable
 
 This phase has priority over broad feature expansion.
 
-- [ ] Canonical `.sln` / project references.
-- [ ] Restore/build under a supported .NET SDK.
+- [x] Canonical `.sln` / project references.
+- [ ] Restore/build under a supported .NET SDK — CI gate physically present, completed result pending.
 - [ ] Resolve compile errors from the consolidated tree.
 - [ ] Build unelevated main application.
 - [ ] Build separate elevated worker.
