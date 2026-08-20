@@ -12,7 +12,7 @@ Goal: one physical source tree, one ordered development history, one canonical r
 - [x] Hybrid automation/manual workflow documented.
 - [x] Consolidate the historical DFX-001..DFX-014 implementation into the repository and prove the tree is internally consistent.
 - [x] Add canonical solution/projects for the consolidated source.
-- [ ] Obtain real compiler evidence for the canonical solution.
+- [x] Obtain real compiler evidence for the canonical solution.
 
 **Gate:** repository contains the actual source required to build DriverFix; historical chat evidence alone is insufficient.
 
@@ -42,30 +42,31 @@ Historical design/contract work exists for these units; each becomes canonical o
 
 ### Immediate order
 
-1. Observe real .NET 10 compiler evidence from the canonical Windows CI gate.
-2. If RED, fix the earliest compiler failure only and rebuild.
-3. If GREEN, publish `win-x64` and produce the first real executable.
-4. Continue DFX-016..023 only where real build/runtime evidence shows they are required before hardware smoke.
+1. Run the canonical `DriverFix-win-x64` package on a non-CI Windows workstation and verify read-only inventory behavior.
+2. Run `DriverFix.exe --elevation-smoke`, approve UAC, and verify the typed no-mutation IPC probe completes without PnPUtil execution.
+3. Exercise live installed-driver metadata and WUA candidate discovery read-only paths.
+4. Proceed to exact-INF backup field evidence before any controlled repair/rollback test.
 
 ## Phase 2 — Compile and executable
 
 This phase has priority over broad feature expansion.
 
 - [x] Canonical `.sln` / project references.
-- [ ] Restore/build under a supported .NET SDK — CI gate physically present, completed result pending.
-- [ ] Resolve compile errors from the consolidated tree.
-- [ ] Build unelevated main application.
-- [ ] Build separate elevated worker.
-- [ ] Publish `win-x64` package.
-- [ ] Produce real `DriverFix.exe`.
+- [x] Restore/build under .NET 10 on a real Windows CI runner.
+- [x] Resolve compiler errors revealed by the consolidated tree.
+- [x] Build unelevated main application.
+- [x] Build separate elevated worker.
+- [x] Publish `win-x64` package.
+- [x] Produce and launch real `DriverFix.exe` in read-only inventory mode on Windows CI.
+- [ ] Complete interactive UAC/IPC no-mutation smoke on a non-CI Windows workstation.
 
-**Gate:** actual Windows executable launches from the canonical repository build.
+**Gate:** actual Windows executable launches from the canonical repository build; privileged boundary must be proven separately before mutation testing.
 
 ## Phase 3 — Windows hardware smoke
 
 Use non-critical test devices first.
 
-- [ ] Inventory real devices.
+- [ ] Inventory real devices on the target workstation.
 - [ ] Join live installed-driver metadata.
 - [ ] Compare diagnosis with Device Manager evidence.
 - [ ] Discover a real candidate without installing it.
