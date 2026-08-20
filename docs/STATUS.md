@@ -44,27 +44,30 @@ Durable journal/recovery planning is physically present. Known-applied mutation 
 Typed elevated operation allow-list, separate `DriverFix.Elevated` executable, `requireAdministrator`, one-shot named pipe, 256-bit nonce, UAC broker and worker-side validation are physically present. No free-form shell/PowerShell command boundary. Real UAC/IPC/PnPUtil execution remains OPEN.
 
 ### Canonical solution/build surface: PRESENT / STATIC-CONTRACT VERIFIED
-Current `main` now contains `DriverFix.sln` with all five canonical projects:
+Current `main` contains `DriverFix.sln` with all five canonical projects:
 - `DriverFix.Core`;
 - `DriverFix.Persistence`;
 - `DriverFix.Windows`;
 - `DriverFix.Cli`;
 - `DriverFix.Elevated`.
 
-Debug/Release configurations are present. Windows-facing projects target `net10.0-windows`; the elevated project keeps its UAC manifest. `verification/verify_build_surface.py` verifies the project graph and, when a .NET SDK is physically available, escalates to real `dotnet build DriverFix.sln -c Release --nologo` instead of treating static checks as compilation.
+Debug/Release configurations are present. Windows-facing projects target `net10.0-windows`; the elevated project keeps its UAC manifest. `verification/verify_build_surface.py` verifies the project graph and escalates to real `dotnet build DriverFix.sln -c Release --nologo` when a .NET SDK is physically available.
 
-The current assistant runtime has no `dotnet` executable, so real compiler evidence is **BLOCKED_ENVIRONMENT**, not GREEN.
+### Windows compiler CI gate: PRESENT / RUNTIME RESULT PENDING
+`.github/workflows/build.yml` now provides a canonical real-build path on `windows-latest`: checkout canonical source, install .NET 10 SDK, capture `dotnet --info`, restore `DriverFix.sln`, then run Release `dotnet build` with `--no-restore`.
+
+The workflow itself is physically present and its action versions/SDK channel are evidence-backed. A completed GitHub Actions job/log has not yet been observed through the available connector, so **real compiler GREEN remains OPEN**. The assistant shell also cannot resolve external hosts, so that environment failure is not treated as a source-code failure.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 and the canonical solution/build surface are also physically present.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015, the canonical solution/build surface and the real Windows compiler gate are physically present.
 
 ## Earliest blocking gate
-**P0 — obtain the first real compiler result from the canonical solution.**
+**P0 — observe the first completed compiler result from the canonical Windows CI gate.**
 
-Nearest unfinished leaf: **run `dotnet build DriverFix.sln -c Release --nologo` in a .NET 10-capable environment, capture the earliest compile failure, apply the minimum fix, and repeat until compile GREEN.**
+Nearest unfinished leaf: **read the `DriverFix Build` job result; if it fails, capture the earliest compiler error and apply only the minimum fix; if it passes, mark real compile GREEN and move to `win-x64` publish.**
 
 ## Next gates
-`real dotnet compile → fix earliest compiler failure → win-x64 publish → DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
+`observe CI compile result → fix earliest compiler failure or mark compile GREEN → win-x64 publish → DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
