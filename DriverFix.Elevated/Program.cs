@@ -33,6 +33,15 @@ if (validation is not null)
     return 66;
 }
 
+if (request.Operation == ElevatedOperation.Probe)
+{
+    await JsonSerializer.SerializeAsync(
+        pipe,
+        new ElevatedResponse(true, null, false, "Elevated IPC probe completed; no PnPUtil command was executed."));
+    await pipe.FlushAsync();
+    return 0;
+}
+
 var runner = new ProcessRunner();
 IReadOnlyList<string> commandArgs = request.Operation switch
 {
