@@ -20,7 +20,7 @@ checks = {
     "exit_code_preserved": "result.ExitCode" in provider,
     "stderr_bounded": "Limit(result.StandardError, 4096)" in provider,
     "cancellation_rethrows": "catch (OperationCanceledException)" in provider and "throw;" in provider,
-    "cli_surfaces_typed_kind": "InventoryProviderException" in program and "ex.Kind" in program,
+    "cli_surfaces_typed_kind": "result.Failure" in program and "failure.Kind" in program,
     "cli_has_cancel_exit": "return 3;" in program,
     "inventory_command_unchanged": all(x in provider for x in [
         '"/enum-devices"', '"/connected"', '"/deviceids"'
@@ -37,7 +37,6 @@ for name, ok in checks.items():
 if failed:
     raise SystemExit("DFX-005 CONTRACT FAIL: " + ", ".join(failed))
 
-# Reference policy: cancellation stays cancellation, not a provider failure.
 def classify(platform_ok=True, launch_ok=True, exit_code=0, parse_ok=True):
     if not platform_ok:
         return "PlatformUnsupported"

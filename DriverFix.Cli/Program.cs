@@ -1,4 +1,5 @@
 using DriverFix.Core.Failures;
+using DriverFix.Core.Services;
 using DriverFix.Windows;
 
 namespace DriverFix.Cli;
@@ -10,19 +11,23 @@ internal static class Program
         try
         {
             var provider = new PnpUtilDeviceInventoryProvider(new ProcessRunner());
-            var devices = await provider.GetConnectedDevicesAsync();
+            var snapshotService = new InventorySnapshotService(provider);
+            var result = await snapshotService.CaptureAsync();
 
-            Console.WriteLine(DeviceInventoryTextFormatter.Format(devices));
+            if (!result.Succeeded)
+            {
+                var failure = result.Failure;
+                Console.Error.WriteLine(
+                    $"DriverFix inventory failed [{failure.Kind}]: {failure.Message}");
+
+                return failure.Kind == InventoryFailureKind.PlatformUnsupported
+                    ? 2
+                    : 1;
+            }
+
+            Console.WriteLine(
+                DeviceInventoryTextFormatter.Format(result.Snapshot.Devices));
             return 0;
-        }
-        catch (InventoryProviderException ex)
-        {
-            Console.Error.WriteLine(
-                $"DriverFix inventory failed [{ex.Kind}]: {ex.Message}");
-
-            return ex.Kind == InventoryFailureKind.PlatformUnsupported
-                ? 2
-                : 1;
         }
         catch (OperationCanceledException)
         {
