@@ -33,20 +33,36 @@ No driver mutation is part of DFX-001..006. Real C# compilation and Windows exec
 
 ### DFX-007 — installed driver metadata: PRESENT / STATIC-CONTRACT VERIFIED
 
-Current `main` now contains:
+Current `main` contains:
 
 - `DriverMetadata` with DeviceID, DeviceName, provider, version, date, INF, signature state and signer;
 - `IDriverMetadataProvider`;
 - `PowerShellDriverMetadataProvider` using read-only `Get-CimInstance Win32_PnPSignedDriver`;
 - selection of `DeviceID`, `DeviceName`, `DriverProviderName`, `DriverVersion`, `DriverDate`, `InfName`, `IsSigned`, `Signer`;
-- `DriverMetadataJsonParser` supporting both singleton-object and array JSON shapes;
+- `DriverMetadataJsonParser` supporting singleton-object and array JSON shapes;
 - `DeviceSnapshot` joining an inventory device to optional installed-driver metadata;
 - `DeviceSnapshotService` joining normalized PnP InstanceId to WMI DeviceID, case-insensitively;
-- unmatched inventory devices are preserved with `InstalledDriver = null` instead of being falsely classified as missing hardware;
+- unmatched inventory devices preserved with `InstalledDriver = null`;
 - cancellation propagation and non-zero process exit handling;
-- no PnPUtil install/delete/remove/restart mutation behavior.
+- no driver mutation behavior.
 
-Microsoft documents `Win32_PnPSignedDriver` as exposing the required driver/signature metadata as read-only properties. Real PowerShell/WMI execution and C# compilation remain OPEN.
+Real PowerShell/WMI execution and C# compilation remain OPEN.
+
+### DFX-008 — evidence-backed diagnosis: PRESENT / STATIC-CONTRACT VERIFIED
+
+Current `main` now contains:
+
+- `DiagnosisKind`;
+- `DiagnosisConfidence`;
+- `DeviceDiagnosis` with explicit evidence text;
+- `DiagnosisEngine` operating only on the canonical `DeviceSnapshot`;
+- deterministic precedence: Code 28 → `DriverMissing/High`; other positive PnP codes → `DeviceProblem/High`; missing joined metadata without explicit PnP error → `DriverMetadataMissing/Medium`; `IsSigned=false` → `DriverUnsigned/High`; missing version → `DriverVersionUnknown/Medium`; otherwise → `Healthy/High`;
+- explicit protection against treating a metadata join miss as proof that a driver is missing;
+- no version-age/latest-driver inference;
+- no install/delete/remove/restart behavior;
+- `verification/verify_dfx008.py` binding the classification and no-speculation invariants.
+
+Real C# compilation and Windows diagnosis execution remain OPEN.
 
 ## Historical DFX lineage
 
@@ -62,13 +78,13 @@ Evidence-backed design exists through DFX-014:
 - DFX-013 — conservative rollback;
 - DFX-014 — durable transaction/recovery and privilege boundary.
 
-DFX-001 through DFX-007 are now physically present in canonical GitHub. Later units retain historical evidence but still require physical consolidation into `main`.
+DFX-001 through DFX-008 are now physically present in canonical GitHub. Later units retain historical evidence but still require physical consolidation into `main`.
 
 ## Earliest blocking gate
 
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-008 — evidence-backed diagnosis classification using the stable device + installed-driver snapshot without speculative fixes.**
+Nearest unfinished leaf: **DFX-009 — exact opaque hardware/compatible identifier matching and compatibility scoring without substring/manufacturer/class inference.**
 
 Do not skip directly to broad feature work based only on historical chat artifacts.
 
