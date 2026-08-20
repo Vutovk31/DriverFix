@@ -38,32 +38,36 @@ Repair requires verified compatibility, positive DriverFix match score, verified
 Rollback requires verified backup, target-bound original/failed snapshots, one connected matching device, one exact backup INF, targeted restart and proof that the original INF or version is restored on a healthy target. No destructive fallback.
 
 ### DFX-014 — durable transaction recovery + privilege boundary: PRESENT / STATIC-CONTRACT VERIFIED
-Current `main` contains:
-- explicit transaction phases from pre-mutation through verification, reboot, rollback and terminal/manual-recovery states;
-- `TransactionRecoveryPlanner` that resumes verification after known-applied repair mutation and resumes rollback verification after known-applied rollback mutation;
-- ambiguous `MutationStarted` / `RollbackStarted` states routed to `ManualRecoveryRequired` rather than replaying mutation;
-- durable `TransactionJournalEntry` evidence with transaction ID, target, phase, original driver identity, candidate/backup paths, reboot flag, timestamp and detail;
-- `ITransactionJournal` plus `DriverFix.Persistence/JsonTransactionJournal`;
-- temp-file write, `FileOptions.WriteThrough`, flush-to-disk and replace/move persistence semantics;
-- terminal `Verified` / `RolledBack` journal entries excluded from incomplete recovery scans;
-- corrupt JSON not auto-replayed;
-- initial transaction-path containment checks;
-- `IPrivilegeBoundary`, `PrivilegeCheckResult` and `WindowsPrivilegeBoundary` using the current Windows token/Administrators role;
-- privilege check does not auto-elevate or launch arbitrary commands;
-- `verification/verify_dfx014.py` binding 14 recovery/persistence/privilege invariants.
+Durable journal/recovery planning is physically present. Known-applied mutation resumes verification only; ambiguous mutation-started states require manual recovery rather than blind replay. Initial Windows privilege check is present without auto-elevation.
 
-Real NTFS crash/reboot persistence, Windows token behavior and C# compilation remain OPEN. Journal cryptographic integrity/quarantine/ACL hardening remains later hardening rather than being falsely claimed in DFX-014.
+### DFX-015 — elevated worker + strict IPC boundary: PRESENT / STATIC-CONTRACT VERIFIED
+Current `main` contains:
+- typed `ElevatedOperation` allow-list with only `InstallExactInf`, `RestartExactDevice`, and `RestoreExactBackup`;
+- typed `ElevatedRequest` / `ElevatedResponse` with a one-time nonce;
+- `ElevatedOperationValidator` requiring exact `.inf` paths, rejecting wildcards and requiring exact InstanceId for targeted restart;
+- separate `DriverFix.Elevated` executable project targeting Windows;
+- worker manifest with `requireAdministrator`;
+- unelevated `ElevatedWorkerBroker` creating a one-connection named pipe with `PipeOptions.CurrentUserOnly`;
+- 256-bit cryptographic nonce and random pipe name;
+- UAC launch through `UseShellExecute=true` + `Verb="runas"`;
+- worker-side nonce comparison before command dispatch;
+- worker constructs PnPUtil argument arrays internally from the typed operation; it does not execute free-form command text;
+- no `cmd.exe`, PowerShell or arbitrary script payload boundary;
+- reboot-required exit codes 3010/1641 preserved in the structured response;
+- `verification/verify_dfx015.py` binding 16 IPC/UAC/allow-list invariants.
+
+Real UAC consent, named-pipe exchange, PnPUtil mutation and C# compilation remain OPEN. This status is intentionally not Windows runtime GREEN.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is now complete**.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**, and the first post-consolidation privileged execution boundary DFX-015 is now physically present.
 
 ## Earliest blocking gate
-**P0 — leave historical reconstruction mode and build the executable architecture.**
+**P0 — obtain real compiler evidence from the complete canonical source tree.**
 
-Nearest unfinished leaf: **DFX-015 — separate elevated worker executable + strict IPC/allow-list boundary for privileged driver mutation.**
+Nearest unfinished leaf: **create/update the canonical solution/build surface to include Core, Windows, Persistence, CLI and Elevated projects, then run real `dotnet build` and fix the earliest compile failure.**
 
 ## Next gates
-`DFX-015 → canonical solution/build → real dotnet compile → win-x64 DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
+`canonical solution/build → real dotnet compile → win-x64 DriverFix.exe → Windows smoke → repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
