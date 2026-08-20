@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>DriverFix.Windows</AssemblyName>
+    <RootNamespace>DriverFix.Windows</RootNamespace>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DriverFix.Core\DriverFix.Core.csproj" />
+  </ItemGroup>
+</Project>
