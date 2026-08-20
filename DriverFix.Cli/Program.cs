@@ -15,9 +15,12 @@ internal static class Program
             if (args.Length == 1 && string.Equals(args[0], "--elevation-smoke", StringComparison.Ordinal))
                 return await RunElevationSmokeAsync();
 
+            if (args.Length == 1 && string.Equals(args[0], "--metadata-smoke", StringComparison.Ordinal))
+                return await RunMetadataSmokeAsync();
+
             if (args.Length != 0)
             {
-                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke]");
+                Console.Error.WriteLine("Usage: DriverFix.exe [--elevation-smoke|--metadata-smoke]");
                 return 64;
             }
 
@@ -54,6 +57,27 @@ internal static class Program
 
         Console.WriteLine(
             DeviceInventoryTextFormatter.Format(result.Snapshot.Devices));
+        return 0;
+    }
+
+    private static async Task<int> RunMetadataSmokeAsync()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Console.Error.WriteLine("DriverFix metadata smoke requires Windows.");
+            return 2;
+        }
+
+        var provider = new PowerShellDriverMetadataProvider(new ProcessRunner());
+        var drivers = await provider.GetInstalledDriversAsync();
+
+        if (drivers.Count == 0)
+        {
+            Console.Error.WriteLine("DriverFix metadata smoke returned zero installed drivers.");
+            return 1;
+        }
+
+        Console.WriteLine($"Installed drivers: {drivers.Count}");
         return 0;
     }
 
