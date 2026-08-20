@@ -1,6 +1,6 @@
 # DriverFix — Canonical Engineering Status
 
-Last canonicalization: 2026-08-20.
+Last canonicalization: 2026-08-21.
 
 ## Repository state
 - Repository: `Vutovk31/DriverFix`
@@ -19,8 +19,8 @@ Read-only PnPUtil inventory, parser fixtures, CLI, typed failures, cancellation 
 ### DFX-007 — installed driver metadata: PRESENT / WINDOWS CI RUNTIME VERIFIED
 Read-only `Win32_PnPSignedDriver` metadata provider, parser and normalized join to inventory snapshots are physically present. Pull request #5 added packaged `DriverFix.exe --driver-metadata-smoke` and Windows CI run `32386609356` executed the existing CIM/PowerShell provider successfully on Windows Server 2025, returning **63 installed driver metadata records** with process exit code `0`. This proves the packaged DFX-007 provider/parser runtime path on a real Windows runner; target-workstation metadata behavior remains OPEN.
 
-### DFX-008 — evidence-backed diagnosis: PRESENT / STATIC-CONTRACT VERIFIED
-Deterministic evidence-only diagnosis is physically present. Metadata join miss is not treated as proof of a missing driver. No version-age guessing or mutation.
+### DFX-008 — evidence-backed diagnosis: PRESENT / WINDOWS CI RUNTIME VERIFIED
+Deterministic evidence-only diagnosis is physically present. Metadata join miss is not treated as proof of a missing driver, and no version-age guessing or mutation is performed. Pull request #10 added packaged `DriverFix.exe --diagnosis-smoke`, which executes live PnP inventory → installed-driver metadata join → `DiagnosisEngine` on Windows. Windows CI run `32419313150` completed the full pipeline successfully and produced **62 diagnoses for 62 connected devices**: **1 `DriverMissing`**, **2 `DriverVersionUnknown`**, and **59 `Healthy`**. The same inventory contained one PnP device with **Problem Code 28**, exercising the explicit evidence-backed `DriverMissing` branch at runtime. Target-workstation diagnosis behavior remains OPEN.
 
 ### DFX-009 — exact identifier compatibility matching: PRESENT / STATIC-REFERENCE VERIFIED
 Opaque exact matching is physically present across Hardware→Hardware, Hardware→Compatible, Compatible→Hardware and Compatible→Compatible tiers. Comparison is trim-only and case-insensitive, with no substring, VEN/DEV, manufacturer or class inference. DriverFix score is not Windows rank.
@@ -58,10 +58,10 @@ Pull request #3 added a post-publish read-only smoke that launches the exact pac
 ### Combined workstation read-only smoke: RUNTIME VERIFIED GREEN ON WINDOWS CI
 Pull request #7 added packaged `DriverFix.exe --workstation-readonly-smoke`, which runs the existing PnP inventory, installed-driver metadata and WUA candidate-discovery paths sequentially without UAC or mutation. Windows CI run `32402977723` completed Release build, both publishes, package verification, all existing smoke gates, the new combined gate and artifact upload successfully. Combined evidence was `Workstation read-only smoke: PASS`, **62 connected devices**, **63 installed driver metadata records**, and **0 Windows Update driver candidates**. This command is intended to reduce the target-workstation read-only field check to one bounded command; execution on the user's physical workstation remains OPEN.
 
-The packaged user-facing executable therefore has runtime evidence for read-only inventory, installed-driver metadata, WUA discovery, verified exact-INF backup/export, and the DFX-012 negative repair-preflight/no-mutation boundary on real Windows CI runners. This still does not prove interactive UAC/IPC completion, target-workstation behavior, an actual controlled repair, post-repair verification or rollback.
+The packaged user-facing executable therefore has runtime evidence for read-only inventory, installed-driver metadata, evidence-backed diagnosis, WUA discovery, verified exact-INF backup/export, and the DFX-012 negative repair-preflight/no-mutation boundary on real Windows CI runners. This still does not prove interactive UAC/IPC completion, target-workstation behavior, an actual controlled repair, post-repair verification or rollback.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, DFX-007 installed-driver metadata, DFX-010 read-only WUA candidate discovery, DFX-011 exact-INF backup/export, DFX-012 negative repair preflight, and the combined workstation read-only command are runtime verified on Windows CI.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, DFX-007 installed-driver metadata, DFX-008 evidence-backed diagnosis, DFX-010 read-only WUA candidate discovery, DFX-011 exact-INF backup/export, DFX-012 negative repair preflight, and the combined workstation read-only command are runtime verified on Windows CI.
 
 ## Earliest blocking gate
 **P0 — exercise the packaged read-only evidence bundle and the no-mutation elevated probe on a non-CI Windows workstation.**
