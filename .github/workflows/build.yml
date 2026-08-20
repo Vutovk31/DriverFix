@@ -111,6 +111,18 @@ jobs:
           if ($text -notmatch 'Exported files:\s*[1-9]\d*') { throw "Backup export smoke did not emit positive file-count evidence" }
           if ($text -notmatch 'Exported bytes:\s*[1-9]\d*') { throw "Backup export smoke did not emit positive byte-count evidence" }
 
+      - name: Smoke repair preflight blocks before mutation
+        shell: pwsh
+        run: |
+          $output = & ./dist/DriverFix.exe --repair-preflight-smoke 2>&1
+          $exitCode = $LASTEXITCODE
+          $text = ($output | Out-String).Trim()
+          Write-Host $text
+          if ($exitCode -ne 0) { throw "DriverFix.exe repair preflight smoke failed with exit code $exitCode" }
+          if ($text -notmatch 'Repair preflight negative smoke:\s*BLOCKED') { throw "Repair preflight smoke did not prove blocked state" }
+          if ($text -notmatch 'Verified driver backup is required before repair\.') { throw "Repair preflight smoke did not prove backup gate evidence" }
+          if ($text -notmatch 'No ProcessRunner or PnPUtil operation is reachable') { throw "Repair preflight smoke did not prove no-mutation path evidence" }
+
       - name: Upload win-x64 package
         uses: actions/upload-artifact@v4
         with:
