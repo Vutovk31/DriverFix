@@ -65,6 +65,16 @@ jobs:
           if ($exitCode -ne 0) { throw "DriverFix.exe smoke failed with exit code $exitCode" }
           if ($text -notmatch 'Connected devices:\s*\d+') { throw "DriverFix.exe smoke did not emit connected-device evidence" }
 
+      - name: Smoke installed-driver metadata (read-only CIM)
+        shell: pwsh
+        run: |
+          $output = & ./dist/DriverFix.exe --metadata-smoke 2>&1
+          $exitCode = $LASTEXITCODE
+          $text = ($output | Out-String).Trim()
+          Write-Host $text
+          if ($exitCode -ne 0) { throw "DriverFix.exe metadata smoke failed with exit code $exitCode" }
+          if ($text -notmatch '^Installed drivers:\s*[1-9]\d*$') { throw "DriverFix.exe metadata smoke did not emit positive installed-driver evidence" }
+
       - name: Upload win-x64 package
         uses: actions/upload-artifact@v4
         with:
