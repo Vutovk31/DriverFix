@@ -194,7 +194,7 @@ internal static class Program
 
             Console.WriteLine("Backup export smoke: PASS");
             Console.WriteLine($"Published INF: {result.InfName}");
-            Console.WriteLine($"Exported files: {result.Files.Count}");
+            Console.WriteLine($"Exported files: {result.ExportedFiles.Count}");
             Console.WriteLine($"Exported bytes: {result.TotalBytes}");
             Console.WriteLine(result.Evidence);
             return 0;
