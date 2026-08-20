@@ -23,25 +23,26 @@ Historical verification is useful evidence but does not substitute for source co
 
 ### DFX-001 — hardware inventory foundation: PRESENT / STATIC-CONTRACT VERIFIED
 
-Current `main` now physically contains:
+Current `main` physically contains the read-only PnPUtil inventory foundation, including `DeviceInventoryItem`, provider/process abstractions, `PnpUtilInventoryParser`, `PnpUtilDeviceInventoryProvider`, project files, and `verification/verify_dfx001.py`.
 
-- `Directory.Build.props`;
-- `DriverFix.Core/DriverFix.Core.csproj`;
-- `DriverFix.Windows/DriverFix.Windows.csproj`;
-- `DeviceInventoryItem`;
-- `IDeviceInventoryProvider`;
-- `IProcessRunner`, `ProcessRunner`, `ProcessResult`;
-- `PnpUtilInventoryParser`;
-- `PnpUtilDeviceInventoryProvider`;
-- `verification/verify_dfx001.py`.
-
-The provider is read-only and uses exactly:
+The provider uses exactly:
 
 `pnputil /enum-devices /connected /deviceids`
 
 It includes Windows/platform guard, non-zero exit-code handling, bounded stderr evidence, cancellation propagation, Hardware/Compatible ID parsing, EN/RU field aliases, and no driver mutation operations.
 
-The canonical files were fetched back from GitHub after write and inspected against the DFX-001 contract. A real C# compile remains OPEN until the repository has enough of the canonical source tree and a Windows/.NET build environment is used.
+### DFX-002 — parser fixture/hardening evidence: PRESENT / FIXTURE-CONTRACT VERIFIED
+
+Current `main` now also contains deterministic parser fixtures and `verification/verify_dfx002.py` covering:
+
+- decorated problem codes such as `52 (0x34) [...]`;
+- Hardware ID and Compatible ID continuation lines;
+- synthetic Russian field aliases;
+- multiple devices without relying on a blank-line separator;
+- Code 28 extraction on the second device;
+- empty-output and no-mutation parser invariants.
+
+The DFX-002 delta does not refactor the frozen DFX-001 production parser. The strongest available local evidence is fixture/reference verification; real C# compilation remains OPEN.
 
 ## Historical DFX lineage
 
@@ -57,13 +58,13 @@ The project has evidence-backed design/contract work through DFX-014:
 - DFX-013 — conservative rollback;
 - DFX-014 — durable transaction/recovery and initial privilege boundary.
 
-Only DFX-001 is currently declared canonical-GitHub physically present. Later units retain their historical verification evidence but still require physical consolidation into `main`.
+DFX-001 and DFX-002 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
 
 ## Earliest blocking gate
 
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-002 — inventory parser fixture/integration evidence and inventory hardening continuation, without refactoring DFX-001.**
+Nearest unfinished leaf: **DFX-003 — inventory CLI/presentation boundary, preserving DFX-001/002 behavior.**
 
 Do not skip directly to broad feature work based only on historical chat artifacts.
 

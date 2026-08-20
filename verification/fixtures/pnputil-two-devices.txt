@@ -1,0 +1,19 @@
+Microsoft PnP Utility
+Instance ID: USB\VID_AAAA&PID_0001\ONE
+Device Description: First Device
+Class Name: USB
+Status: Started
+Problem Code: 0
+Hardware IDs:
+ USB\VID_AAAA&PID_0001
+Compatible IDs:
+ USB\Class_01
+Instance ID: USB\VID_BBBB&PID_0002\TWO
+Device Description: Second Device
+Class Name: USB
+Status: Error
+Problem Code: 28 (0x1C) [CM_PROB_FAILED_INSTALL]
+Hardware IDs:
+ USB\VID_BBBB&PID_0002
+Compatible IDs:
+ USB\Class_02

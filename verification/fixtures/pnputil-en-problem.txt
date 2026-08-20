@@ -1,0 +1,13 @@
+Microsoft PnP Utility
+
+Instance ID:                USB\VID_1234&PID_5678\001
+Device Description:         Unknown USB Device
+Class Name:                 USB
+Manufacturer Name:          Example Vendor
+Status:                     Error
+Problem Code:               52 (0x34) [CM_PROB_UNSIGNED_DRIVER]
+Hardware IDs:
+                            USB\VID_1234&PID_5678&REV_0100
+                            USB\VID_1234&PID_5678
+Compatible IDs:
+                            USB\Class_FF&SubClass_00&Prot_00
