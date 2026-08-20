@@ -50,13 +50,13 @@ Current `main` contains `DriverFix.Cli` with:
 
 - `DriverFix.Cli.csproj` targeting `net10.0-windows`;
 - references to canonical `DriverFix.Core` and `DriverFix.Windows` projects;
-- `Program.cs` composing the existing `PnpUtilDeviceInventoryProvider` and `ProcessRunner`;
+- `Program.cs` composing the existing `PnpUtilDeviceInventoryProvider` and `ProcessRunner` through the canonical inventory capture boundary;
 - `DeviceInventoryTextFormatter` rendering connected-device count, description, Instance ID, class, manufacturer, status, Problem Code, Hardware IDs and Compatible IDs;
 - stable provider-order presentation;
-- explicit exit codes for success, general failure and unsupported platform;
+- explicit exit codes for success, general failure, unsupported platform and cancellation;
 - `verification/verify_dfx003.py` enforcing the presentation contract and no-mutation invariant.
 
-DFX-003 does not change the frozen DFX-001/002 parser/provider behavior. Real `dotnet build` and Windows CLI execution remain OPEN.
+DFX-003 preserves its presentation behavior while later inventory units evolve the internal capture boundary. Real `dotnet build` and Windows CLI execution remain OPEN.
 
 ### DFX-004 — inventory integration evidence: PRESENT / FIXTURE-CONTRACT VERIFIED
 
@@ -71,22 +71,38 @@ Current `main` contains deterministic end-to-end fixtures and `verification/veri
 - binding checks against the frozen parser/formatter contracts when run from a repository checkout;
 - no driver mutation operations.
 
-The DFX-004 delta adds verification evidence only and does not refactor DFX-001/002/003 production code. Real C# compilation and real Windows PnPUtil execution remain OPEN.
+The DFX-004 delta adds verification evidence only and does not refactor DFX-001/002/003 production behavior. Real C# compilation and real Windows PnPUtil execution remain OPEN.
 
 ### DFX-005 — typed inventory failure boundary: PRESENT / STATIC-REFERENCE VERIFIED
 
-Current `main` now contains a typed inventory failure taxonomy:
+Current `main` contains a typed inventory failure taxonomy:
 
 - `PlatformUnsupported`;
 - `ProcessLaunchFailed`;
 - `ToolReturnedNonZero`;
 - `UnexpectedFailure`.
 
-`InventoryProviderException` preserves the failure kind, optional process exit code, bounded stderr evidence and inner exception. `PnpUtilDeviceInventoryProvider` now converts platform/process/non-zero/parser failures into these typed outcomes while preserving `OperationCanceledException` as cancellation instead of misclassifying it as a provider failure. The read-only PnPUtil command remains unchanged.
+`InventoryProviderException` preserves the failure kind, optional process exit code, bounded stderr evidence and inner exception. `PnpUtilDeviceInventoryProvider` converts platform/process/non-zero/parser failures into these typed outcomes while preserving `OperationCanceledException` as cancellation instead of misclassifying it as a provider failure. The read-only PnPUtil command remains unchanged.
 
-`DriverFix.Cli` surfaces the typed kind, retains exit code `2` for unsupported platform, uses `1` for provider/general failure, and uses `3` for cancellation. `verification/verify_dfx005.py` binds the taxonomy, provider behavior, cancellation propagation, bounded stderr and no-mutation invariants.
+The CLI now receives the same typed information through the DFX-006 result boundary. `verification/verify_dfx005.py` was reconciled to that boundary while retaining failure-kind, cancellation, bounded-stderr and no-mutation checks.
 
 Real C# compilation and Windows process-failure/cancellation execution remain OPEN.
+
+### DFX-006 — stable inventory snapshot/result boundary: PRESENT / STATIC-REFERENCE VERIFIED
+
+Current `main` now contains:
+
+- `IInventorySnapshotService`;
+- `InventorySnapshot` with `CapturedAtUtc` and a captured device set;
+- `InventoryFailureEvidence` preserving failure kind, exit code and stderr evidence;
+- `InventoryCaptureResult` with disjoint success/failure payloads;
+- `InventorySnapshotService` wrapping the device provider, copying the returned device collection and recording UTC capture time;
+- explicit cancellation propagation instead of converting cancellation into failure data;
+- typed provider failure mapping plus an `UnexpectedFailure` fallback for non-cancellation exceptions;
+- CLI composition through `CaptureAsync` while preserving the DFX-004 successful text format and established exit codes;
+- `verification/verify_dfx006.py` binding snapshot/result/cancellation/no-mutation invariants.
+
+The DFX-003 and DFX-005 static verifiers were reconciled to the new internal boundary without weakening their behavior or safety checks. Real C# compilation and Windows inventory execution remain OPEN because the current execution container cannot resolve `github.com` for checkout/build and therefore provides no valid runtime evidence.
 
 ## Historical DFX lineage
 
@@ -102,13 +118,13 @@ The project has evidence-backed design/contract work through DFX-014:
 - DFX-013 — conservative rollback;
 - DFX-014 — durable transaction/recovery and initial privilege boundary.
 
-DFX-001 through DFX-005 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
+DFX-001 through DFX-006 are currently declared canonical-GitHub physically present. Later units retain historical verification evidence but still require physical consolidation into `main`.
 
 ## Earliest blocking gate
 
 **P0 — continue canonical source consolidation in order.**
 
-Nearest unfinished leaf: **DFX-006 — stable inventory snapshot/result boundary so callers receive either a captured device set or typed failure evidence without losing cancellation semantics.**
+Nearest unfinished leaf: **DFX-007 — installed driver metadata joined to the stable inventory snapshot without introducing mutation behavior.**
 
 Do not skip directly to broad feature work based only on historical chat artifacts.
 
