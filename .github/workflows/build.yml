@@ -12,9 +12,9 @@ permissions:
 
 jobs:
   build:
-    name: Release build (.NET 10 / Windows)
+    name: Release build + win-x64 publish (.NET 10 / Windows)
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout canonical source
@@ -33,3 +33,32 @@ jobs:
 
       - name: Build canonical solution
         run: dotnet build DriverFix.sln -c Release --no-restore --nologo
+
+      - name: Publish user-facing executable
+        run: dotnet publish DriverFix.Cli/DriverFix.Cli.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o publish/user
+
+      - name: Publish elevated worker
+        run: dotnet publish DriverFix.Elevated/DriverFix.Elevated.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o publish/elevated
+
+      - name: Verify canonical executable package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item publish/user/DriverFix.exe dist/DriverFix.exe
+          Copy-Item publish/elevated/DriverFix.Elevated.exe dist/DriverFix.Elevated.exe
+          $required = @('dist/DriverFix.exe', 'dist/DriverFix.Elevated.exe')
+          foreach ($file in $required) {
+            if (-not (Test-Path $file -PathType Leaf)) { throw "Missing executable: $file" }
+            $item = Get-Item $file
+            if ($item.Length -le 0) { throw "Empty executable: $file" }
+            $hash = Get-FileHash $file -Algorithm SHA256
+            Write-Host "$($item.Name) bytes=$($item.Length) sha256=$($hash.Hash)"
+          }
+
+      - name: Upload win-x64 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: DriverFix-win-x64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
