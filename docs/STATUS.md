@@ -55,18 +55,21 @@ Pull request #2 changed the user-facing assembly name to `DriverFix` and extende
 ### Windows executable smoke: RUNTIME VERIFIED GREEN
 Pull request #3 added a post-publish read-only smoke that launches the exact packaged `dist/DriverFix.exe`, captures stdout/stderr, requires process exit code `0`, and requires `Connected devices: <number>` evidence before artifact upload. Clean Windows run `32377385614` passed restore, Release build, both publish steps, package verification, the executable smoke, and artifact upload. `DriverFix.exe` enumerated **67 connected devices** on Windows Server 2025, including real PnP instance IDs, hardware/compatible IDs, statuses and one device reporting `Problem Code: 28`. The smoke gate was squash-merged as `9724e030481ca74772ea72afcfc35614cdd438bd`.
 
-This proves that the packaged user-facing executable launches and performs its current read-only PnP inventory path on a real Windows runner. It does not prove interactive UAC/IPC completion, backup/repair/rollback, or user-workstation hardware behavior.
+### Combined workstation read-only smoke: RUNTIME VERIFIED GREEN ON WINDOWS CI
+Pull request #7 added packaged `DriverFix.exe --workstation-readonly-smoke`, which runs the existing PnP inventory, installed-driver metadata and WUA candidate-discovery paths sequentially without UAC or mutation. Windows CI run `32402977723` completed Release build, both publishes, package verification, all existing smoke gates, the new combined gate and artifact upload successfully. Combined evidence was `Workstation read-only smoke: PASS`, **62 connected devices**, **63 installed driver metadata records**, and **0 Windows Update driver candidates**. This command is intended to reduce the target-workstation read-only field check to one bounded command; execution on the user's physical workstation remains OPEN.
+
+The packaged user-facing executable therefore has runtime evidence for its read-only inventory, metadata and WUA discovery paths on a real Windows CI runner. This still does not prove interactive UAC/IPC completion, backup/repair/rollback, or user-workstation hardware behavior.
 
 ## Historical DFX lineage
-Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, DFX-007 installed-driver metadata, and DFX-010 read-only WUA candidate discovery are runtime verified on Windows CI.
+Canonical physical consolidation of **DFX-001 through DFX-014 is complete**. DFX-015 is physically present and Windows-build verified. Real Windows Release compile, canonical win-x64 publish, packaged read-only inventory smoke, DFX-007 installed-driver metadata, DFX-010 read-only WUA candidate discovery, and the combined workstation read-only command are runtime verified on Windows CI.
 
 ## Earliest blocking gate
-**P0 — exercise the packaged executable and the no-mutation elevated probe on a non-CI Windows workstation.**
+**P0 — exercise the packaged read-only evidence bundle and the no-mutation elevated probe on a non-CI Windows workstation.**
 
-Nearest unfinished leaf: **run `DriverFix.exe` normally on the target Windows workstation, then run `DriverFix.exe --elevation-smoke`, approve the UAC prompt, and require the exact evidence `Elevated IPC probe completed; no PnPUtil command was executed.`**
+Nearest unfinished leaf: **run `DriverFix.exe --workstation-readonly-smoke` on the target Windows workstation and require `Workstation read-only smoke: PASS`; then run `DriverFix.exe --elevation-smoke`, approve UAC, and require the exact evidence `Elevated IPC probe completed; no PnPUtil command was executed.`**
 
 ## Next gates
-`target Windows workstation inventory smoke → UAC/IPC no-mutation smoke → target-workstation installed-driver metadata + WUA runtime checks → backup field test → controlled repair/rollback field test → Audio Diagnostics`
+`target Windows workstation combined read-only smoke → UAC/IPC no-mutation smoke → backup field test → controlled repair/rollback field test → Audio Diagnostics`
 
 ## Product milestone
 **Audio Diagnostics Pack** remains explicit. Canonical acceptance case: `Windows 11 + headphones already connected → no usable sound/endpoint after startup → unplug/replug makes it work`.
