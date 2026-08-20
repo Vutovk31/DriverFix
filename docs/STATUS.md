@@ -19,6 +19,30 @@ Two states must not be confused:
 
 Historical verification is useful evidence but does not substitute for source consolidation and compilation.
 
+## Canonical physical source status
+
+### DFX-001 — hardware inventory foundation: PRESENT / STATIC-CONTRACT VERIFIED
+
+Current `main` now physically contains:
+
+- `Directory.Build.props`;
+- `DriverFix.Core/DriverFix.Core.csproj`;
+- `DriverFix.Windows/DriverFix.Windows.csproj`;
+- `DeviceInventoryItem`;
+- `IDeviceInventoryProvider`;
+- `IProcessRunner`, `ProcessRunner`, `ProcessResult`;
+- `PnpUtilInventoryParser`;
+- `PnpUtilDeviceInventoryProvider`;
+- `verification/verify_dfx001.py`.
+
+The provider is read-only and uses exactly:
+
+`pnputil /enum-devices /connected /deviceids`
+
+It includes Windows/platform guard, non-zero exit-code handling, bounded stderr evidence, cancellation propagation, Hardware/Compatible ID parsing, EN/RU field aliases, and no driver mutation operations.
+
+The canonical files were fetched back from GitHub after write and inspected against the DFX-001 contract. A real C# compile remains OPEN until the repository has enough of the canonical source tree and a Windows/.NET build environment is used.
+
 ## Historical DFX lineage
 
 The project has evidence-backed design/contract work through DFX-014:
@@ -33,11 +57,13 @@ The project has evidence-backed design/contract work through DFX-014:
 - DFX-013 — conservative rollback;
 - DFX-014 — durable transaction/recovery and initial privilege boundary.
 
-These units are **not yet declared canonical-GitHub VERIFIED as a complete source tree**. The repository was newly created and source consolidation is the earliest physical gate.
+Only DFX-001 is currently declared canonical-GitHub physically present. Later units retain their historical verification evidence but still require physical consolidation into `main`.
 
 ## Earliest blocking gate
 
-**P0 — consolidate the actual source required for DFX-001..DFX-014 into this repository and compile it.**
+**P0 — continue canonical source consolidation in order.**
+
+Nearest unfinished leaf: **DFX-002 — inventory parser fixture/integration evidence and inventory hardening continuation, without refactoring DFX-001.**
 
 Do not skip directly to broad feature work based only on historical chat artifacts.
 
@@ -58,7 +84,7 @@ Target architecture:
 
 ## Product milestone added
 
-**Audio Diagnostics Pack** is now an explicit roadmap milestone.
+**Audio Diagnostics Pack** is an explicit roadmap milestone.
 
 Canonical acceptance case:
 
@@ -68,4 +94,4 @@ Success criterion: after evidence-backed repair and reboot/start under the same 
 
 ## Current priority
 
-`consolidate source → DFX-015 → real compile → win-x64 executable → Windows smoke → hardware repair/rollback → Audio Diagnostics`
+`consolidate DFX-001..014 → DFX-015 → real compile → win-x64 executable → Windows smoke → hardware repair/rollback → Audio Diagnostics`
