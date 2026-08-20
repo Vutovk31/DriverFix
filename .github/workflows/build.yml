@@ -55,6 +55,16 @@ jobs:
             Write-Host "$($item.Name) bytes=$($item.Length) sha256=$($hash.Hash)"
           }
 
+      - name: Smoke user-facing executable (read-only inventory)
+        shell: pwsh
+        run: |
+          $output = & ./dist/DriverFix.exe 2>&1
+          $exitCode = $LASTEXITCODE
+          $text = ($output | Out-String).Trim()
+          Write-Host $text
+          if ($exitCode -ne 0) { throw "DriverFix.exe smoke failed with exit code $exitCode" }
+          if ($text -notmatch 'Connected devices:\s*\d+') { throw "DriverFix.exe smoke did not emit connected-device evidence" }
+
       - name: Upload win-x64 package
         uses: actions/upload-artifact@v4
         with:
