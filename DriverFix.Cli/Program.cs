@@ -40,7 +40,7 @@ internal static class Program
                 return 64;
             }
 
-            return await RunInventoryAsync();
+            return await InteractiveReadOnlyRun.RunAsync();
         }
         catch (OperationCanceledException)
         {
