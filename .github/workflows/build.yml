@@ -55,15 +55,21 @@ jobs:
             Write-Host "$($item.Name) bytes=$($item.Length) sha256=$($hash.Hash)"
           }
 
-      - name: Smoke user-facing executable (read-only inventory)
+      - name: Smoke user-facing no-args read-only diagnosis
         shell: pwsh
         run: |
           $output = & ./dist/DriverFix.exe 2>&1
           $exitCode = $LASTEXITCODE
           $text = ($output | Out-String).Trim()
           Write-Host $text
-          if ($exitCode -ne 0) { throw "DriverFix.exe smoke failed with exit code $exitCode" }
-          if ($text -notmatch 'Connected devices:\s*\d+') { throw "DriverFix.exe smoke did not emit connected-device evidence" }
+          if ($exitCode -ne 0) { throw "DriverFix.exe no-args smoke failed with exit code $exitCode" }
+          if ($text -notmatch 'No drivers or devices will be changed\.') { throw "No-args smoke did not emit read-only safety evidence" }
+          if ($text -notmatch 'Connected devices:\s*\d+') { throw "No-args smoke did not emit connected-device evidence" }
+          if ($text -notmatch 'Installed driver metadata:\s*[1-9]\d*') { throw "No-args smoke did not emit installed-driver evidence" }
+          if ($text -notmatch 'Diagnoses:\s*\d+') { throw "No-args smoke did not emit diagnosis-count evidence" }
+          if ($text -notmatch 'Problems found:\s*\d+') { throw "No-args smoke did not emit problem-summary evidence" }
+          if ($text -notmatch 'Read-only diagnosis completed successfully\.') { throw "No-args smoke did not emit completion evidence" }
+          if ($text -match 'Press any key to exit') { throw "CI no-args execution attempted to enter the interactive pause path" }
 
       - name: Smoke installed driver metadata (read-only CIM)
         shell: pwsh
