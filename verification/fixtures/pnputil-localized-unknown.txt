@@ -1,0 +1,21 @@
+Microsoft PnP Utility
+
+Kennung:                    PCI\VEN_10DE&DEV_1C82\4&ABCDEF&0&0008
+Beschreibung:               Test display adapter
+Klasse:                     Display
+Hersteller:                 NVIDIA
+Zustand:                    Started
+Problem:                    0
+Hardwarekennungen:
+                            PCI\VEN_10DE&DEV_1C82
+Kompatible Kennungen:
+                            PCI\VEN_10DE&DEV_1C82&REV_A1
+
+Kennung:                    USB\VID_046D&PID_C534\6&123456&0&2
+Beschreibung:               Test USB receiver
+Klasse:                     HIDClass
+Hersteller:                 Logitech
+Zustand:                    Started
+Problem:                    0
+Hardwarekennungen:
+                            USB\VID_046D&PID_C534
