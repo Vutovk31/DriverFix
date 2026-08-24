@@ -21,7 +21,8 @@ public static class PnpUtilInventoryParser
         foreach (var block in SplitDeviceBlocks(output))
         {
             var fields = ParseFields(block);
-            var instanceId = First(fields, "Instance ID", "Идентификатор экземпляра");
+            var instanceId = First(fields, "Instance ID", "Идентификатор экземпляра")
+                ?? InferInstanceId(block);
 
             if (string.IsNullOrWhiteSpace(instanceId))
                 continue;
@@ -42,11 +43,21 @@ public static class PnpUtilInventoryParser
 
     private static IReadOnlyList<IReadOnlyList<string>> SplitDeviceBlocks(string output)
     {
+        var normalized = output.Replace("\r\n", "\n");
+        var localizedBlocks = SplitByKnownInstanceKeys(normalized);
+        if (localizedBlocks.Count > 0)
+            return localizedBlocks;
+
+        return SplitByParagraphs(normalized);
+    }
+
+    private static IReadOnlyList<IReadOnlyList<string>> SplitByKnownInstanceKeys(string output)
+    {
         var blocks = new List<IReadOnlyList<string>>();
         var current = new List<string>();
         var seenInstance = false;
 
-        foreach (var raw in output.Replace("\r\n", "\n").Split('\n'))
+        foreach (var raw in output.Split('\n'))
         {
             var trimmed = raw.Trim();
             var isInstance = InstanceIdKeys.Any(key =>
@@ -69,6 +80,60 @@ public static class PnpUtilInventoryParser
             blocks.Add(current.ToArray());
 
         return blocks;
+    }
+
+    private static IReadOnlyList<IReadOnlyList<string>> SplitByParagraphs(string output)
+    {
+        var blocks = new List<IReadOnlyList<string>>();
+        var current = new List<string>();
+
+        foreach (var raw in output.Split('\n'))
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                if (current.Count > 0)
+                {
+                    blocks.Add(current.ToArray());
+                    current.Clear();
+                }
+                continue;
+            }
+
+            current.Add(raw);
+        }
+
+        if (current.Count > 0)
+            blocks.Add(current.ToArray());
+
+        return blocks;
+    }
+
+    private static string? InferInstanceId(IReadOnlyList<string> lines)
+    {
+        foreach (var raw in lines)
+        {
+            var colon = raw.IndexOf(':');
+            if (colon <= 0)
+                continue;
+
+            var value = raw[(colon + 1)..].Trim();
+            if (LooksLikeDeviceInstanceId(value))
+                return value;
+        }
+
+        return null;
+    }
+
+    private static bool LooksLikeDeviceInstanceId(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Contains(' '))
+            return false;
+
+        var slash = value.IndexOf('\\');
+        if (slash <= 0 || slash == value.Length - 1)
+            return false;
+
+        return value[..slash].All(ch => char.IsLetterOrDigit(ch) || ch is '_' or '-');
     }
 
     private static Dictionary<string, List<string>> ParseFields(

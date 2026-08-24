@@ -10,25 +10,25 @@ checks = {
     "problem_code_prefix_parser": 'Regex.Match(value, @"^\\s*(\\d+)")' in parser,
     "english_aliases": all(x in parser for x in ["Instance ID", "Hardware IDs", "Compatible IDs", "Problem Code"]),
     "russian_aliases": all(x in parser for x in ["Идентификатор экземпляра", "ИД оборудования", "Совместимые ИД", "Код проблемы"]),
-    "device_split_by_instance_id": "isInstance && seenInstance" in parser,
+    "known_locale_split_preserved": "SplitByKnownInstanceKeys" in parser,
+    "unknown_locale_paragraph_fallback": "SplitByParagraphs" in parser,
+    "unknown_locale_instance_inference": "InferInstanceId" in parser and "LooksLikeDeviceInstanceId" in parser,
     "continuation_lines_preserved": "char.IsWhiteSpace(raw[0])" in parser,
     "empty_output_safe": "Array.Empty<DeviceInventoryItem>()" in parser,
-    "no_driver_mutation": all(x not in parser for x in ["/add-driver", "/delete-driver", "/remove-device", "/restart-device"]),
+    "no_driver_mutation": all(x not in parser for x in ["/add-driver", "/delete-driver", "/remove-device", "/restart-device", "/scan-devices"]),
 }
 
 INSTANCE_KEYS = ["Instance ID", "Идентификатор экземпляра"]
 ALIASES = {
     "instance": ["Instance ID", "Идентификатор экземпляра"],
     "description": ["Device Description", "Описание устройства"],
-    "class": ["Class Name", "Имя класса"],
     "manufacturer": ["Manufacturer Name", "Имя изготовителя", "Производитель"],
-    "status": ["Status", "Состояние"],
     "problem": ["Problem Code", "Код проблемы"],
     "hardware": ["Hardware IDs", "ИД оборудования"],
     "compatible": ["Compatible IDs", "Совместимые ИД"],
 }
 
-def split_blocks(text):
+def split_known(text):
     blocks, current, seen = [], [], False
     for raw in text.replace("\r\n", "\n").split("\n"):
         trimmed = raw.strip()
@@ -43,6 +43,23 @@ def split_blocks(text):
     if current:
         blocks.append(current)
     return blocks
+
+def split_paragraphs(text):
+    blocks, current = [], []
+    for raw in text.replace("\r\n", "\n").split("\n"):
+        if not raw.strip():
+            if current:
+                blocks.append(current)
+                current = []
+            continue
+        current.append(raw)
+    if current:
+        blocks.append(current)
+    return blocks
+
+def split_blocks(text):
+    known = split_known(text)
+    return known if known else split_paragraphs(text)
 
 def parse_fields(lines):
     result, current = {}, None
@@ -71,6 +88,19 @@ def first(fields, names):
     values = vals(fields, names)
     return values[0] if values else None
 
+def infer_instance(lines):
+    for raw in lines:
+        colon = raw.find(":")
+        if colon <= 0:
+            continue
+        value = raw[colon + 1:].strip()
+        if " " in value or "\\" not in value:
+            continue
+        prefix, rest = value.split("\\", 1)
+        if prefix and rest and all(ch.isalnum() or ch in "_-" for ch in prefix):
+            return value
+    return None
+
 def parse_problem(value):
     if not value:
         return None
@@ -81,7 +111,7 @@ def parse(text):
     devices = []
     for block in split_blocks(text):
         fields = parse_fields(block)
-        instance = first(fields, ALIASES["instance"])
+        instance = first(fields, ALIASES["instance"]) or infer_instance(block)
         if not instance:
             continue
         devices.append({
@@ -106,6 +136,13 @@ checks["fixture_ru_id_continuations"] = len(ru[0]["hardware"]) == 2 and len(ru[0
 two = parse((fixtures / "pnputil-two-devices.txt").read_text(encoding="utf-8"))
 checks["fixture_two_devices_without_blank_separator"] = len(two) == 2
 checks["fixture_second_problem_28"] = two[1]["problem"] == 28
+
+unknown = parse((fixtures / "pnputil-localized-unknown.txt").read_text(encoding="utf-8"))
+checks["fixture_unknown_locale_devices_recovered"] = len(unknown) == 2
+checks["fixture_unknown_locale_instance_ids"] = (
+    unknown[0]["instance"].startswith("PCI\\") and unknown[1]["instance"].startswith("USB\\")
+)
+checks["fixture_unknown_locale_does_not_invent_fields"] = unknown[0]["problem"] is None and unknown[0]["hardware"] == []
 
 failed = [name for name, ok in checks.items() if not ok]
 for name, ok in checks.items():
