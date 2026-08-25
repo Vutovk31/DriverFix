@@ -73,14 +73,38 @@ internal static class InteractiveReadOnlyRun
         Console.WriteLine("Analyzing driver state...");
         var snapshotService = new DeviceSnapshotService(new PreloadedDriverMetadataProvider(metadata));
         var snapshots = await snapshotService.JoinAsync(inventory.Snapshot);
-        var diagnoses = snapshots.Select(DiagnosisEngine.Diagnose).ToArray();
-        var problemCount = diagnoses.Count(diagnosis => diagnosis.Kind != DiagnosisKind.Healthy);
+        var results = snapshots
+            .Select(snapshot => (Snapshot: snapshot, Diagnosis: DiagnosisEngine.Diagnose(snapshot)))
+            .ToArray();
+        var diagnoses = results.Select(result => result.Diagnosis).ToArray();
+        var problems = results
+            .Where(result => result.Diagnosis.Kind != DiagnosisKind.Healthy)
+            .ToArray();
 
         Console.WriteLine($"Diagnoses: {diagnoses.Length}");
-        Console.WriteLine($"Problems found: {problemCount}");
+        Console.WriteLine($"Problems found: {problems.Length}");
 
         foreach (var group in diagnoses.GroupBy(d => d.Kind).OrderBy(g => g.Key.ToString(), StringComparer.Ordinal))
             Console.WriteLine($"Diagnosis {group.Key}: {group.Count()}");
+
+        if (problems.Length > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Problem devices:");
+
+            foreach (var result in problems)
+            {
+                var device = result.Snapshot.Device;
+                var description = string.IsNullOrWhiteSpace(device.DeviceDescription)
+                    ? "(description unavailable)"
+                    : device.DeviceDescription.Trim();
+
+                Console.WriteLine($"- {description}");
+                Console.WriteLine($"  Instance ID: {device.InstanceId}");
+                Console.WriteLine($"  Diagnosis: {result.Diagnosis.Kind} ({result.Diagnosis.Confidence})");
+                Console.WriteLine($"  Evidence: {result.Diagnosis.Evidence}");
+            }
+        }
 
         Console.WriteLine();
         Console.WriteLine("Read-only diagnosis completed successfully.");
