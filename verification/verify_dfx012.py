@@ -2,17 +2,19 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 executor = (root / "DriverFix.Windows/PnpUtilRepairExecutor.cs").read_text(encoding="utf-8")
+preflight = (root / "DriverFix.Core/Repair/RepairPreflightService.cs").read_text(encoding="utf-8")
 verify = (root / "DriverFix.Core/Repair/RepairVerificationService.cs").read_text(encoding="utf-8")
 request = (root / "DriverFix.Core/Repair/RepairRequest.cs").read_text(encoding="utf-8")
 
 checks = {
-    "backup_required": "request.Backup.IsVerified" in executor and "request.Backup.TotalBytes <= 0" in executor,
-    "compatibility_required": "request.CompatibilityVerified" in executor and "request.DriverFixScore <= 0" in executor,
-    "blast_radius_gate": "request.ConnectedMatchingDeviceCount != 1" in executor,
-    "before_target_bound": "request.BeforeSnapshot.Device.InstanceId" in executor,
-    "exact_inf_only": "Path.GetExtension(request.CandidateInfPath)" in executor,
-    "wildcards_blocked": "IndexOf('*')" in executor and "IndexOf('?')" in executor,
-    "inf_must_exist": "File.Exists(fullInf)" in executor,
+    "backup_required": "request.Backup.IsVerified" in preflight and "request.Backup.TotalBytes <= 0" in preflight,
+    "compatibility_required": "request.CompatibilityVerified" in preflight and "request.DriverFixScore <= 0" in preflight,
+    "blast_radius_gate": "request.ConnectedMatchingDeviceCount != 1" in preflight,
+    "before_target_bound": "request.BeforeSnapshot.Device.InstanceId" in preflight,
+    "exact_inf_only": "Path.GetExtension(request.CandidateInfPath)" in preflight,
+    "wildcards_blocked": "IndexOf('*')" in preflight and "IndexOf('?')" in preflight,
+    "inf_must_exist": "File.Exists(fullInf)" in preflight,
+    "executor_uses_preflight": "RepairPreflightService.Evaluate(request)" in executor and "preflight.FullInfPath" in executor,
     "install_shape": 'new[] { "/add-driver", fullInf, "/install" }' in executor,
     "targeted_restart": 'new[] { "/restart-device", request.TargetInstanceId }' in executor,
     "reboot_codes": "3010 or 1641" in executor,
